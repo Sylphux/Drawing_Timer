@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawing Timer</title>
+    <style>
+        /* =========================================================
+           RESET
+        ========================================================= */
+        * { box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; margin: 0; }
+        body {
+            display: flex; flex-direction: column; overflow: hidden;
+            background: #111214; color: #f1f1f1;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        /* =========================================================
+           HEADER & FILTER ZONES
+        ========================================================= */
+        header {
+            display: flex; align-items: center; gap: 16px; min-height: 56px; padding: 8px 14px;
+            background: #1b1d20; border-bottom: 1px solid #303238;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3); z-index: 10;
+            flex-wrap: wrap; justify-content: center;
+        }
+
+        .filter-zones {
+            display: flex; gap: 12px; align-items: center;
+        }
+
+        .zone {
+            display: flex; align-items: center; gap: 0px; padding: 4px 6px; border-radius: 10px; height: 48px; border: none;
+        }
+
+        .zone-group {
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        .zone-label {
+            font-size: 11px; font-weight: 700; letter-spacing: 0.5px; width: 30px; text-align: right;
+        }
+
+        /* Zone Claire (Sélection) */
+        .zone-light {
+            background: #f2efe9;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .zone-light .input-container {
+            background: #ffffff; border: 1px solid #d8d4cc;
+        }
+
+        .zone-light input { color: #111214; }
+        .zone-light input::placeholder { color: #9a9b9e; }
+        .zone-light .zone-label { color: #55534e; }
+
+        /* Zone Sombre (Discrimination/Exclusion) */
+        .zone-dark {
+            background: #111214;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        .zone-dark .input-container {
+            background: #1a1c20; border: 1px solid #3b3e44;
+        }
+
+        .zone-dark input { color: #ffffff; }
+        .zone-dark input::placeholder { color: #60636a; }
+        .zone-dark .zone-label { color: #9699a0; }
+
+        /* Zone Duration (Temps) */
+        .zone-duration {
+            background: #1a1c20;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+            border: 1px solid #303238;
+            align-items: center;
+            height: 48px;
+            padding: 6px;
+        }
+
+        /* Input Containers */
+        .input-container {
+            position: relative; width: 200px; height: 36px; border-radius: 7px; overflow: hidden;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .input-container:focus-within {
+            border-color: #4f8cff !important;
+            box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12) !important;
+        }
+
+        .input-container input {
+            position: relative; z-index: 2; width: 100%; height: 100%; padding: 0 12px;
+            border: none; background: transparent; outline: none; font-size: 14px; font-family: inherit;
+        }
+
+        /* =========================================================
+           OTHER INPUTS
+        ========================================================= */
+        input[type="number"], input[type="text"]:not(.input-container input) {
+            height: 36px; border: 1px solid #3b3e44; border-radius: 7px;
+            background: #101113; color: #ffffff; outline: none; font-family: inherit;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        #durationInput { width: 75px; padding: 0 10px; text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; }
+        #durationInput:focus { border-color: #4f8cff; box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12); }
+        #durationInput::placeholder { color: #60636a; }
+
+        /* =========================================================
+           HEADER BUTTONS
+        ========================================================= */
+        header button {
+            height: 48px; padding: 0 20px; border: 1px solid #3b3e44; border-radius: 10px;
+            background: #2b2e34; color: #e1e3e8; font-family: inherit; font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.08s ease;
+        }
+        header button:hover:not(:disabled) { background: #383c44; border-color: #525660; color: #ffffff; }
+        header button:active { transform: translateY(1px); }
+        header button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+        #goButton { background: #f2efe9; color: #111214; border-color: #f2efe9; }
+        #goButton:hover:not(:disabled) { background: #e2dfd9; border-color: #e2dfd9; color: #111214; }
+
+        /* =========================================================
+           FLOATING SIDEBAR CONTROLS (Bottom Left)
+        ========================================================= */
+        #sidebar {
+            position: absolute; left: 22px; bottom: 65px; display: flex; flex-direction: column; gap: 8px; z-index: 20;
+            background: rgba(27, 29, 32, 0.85); border: 1px solid #303238; padding: 14px; border-radius: 10px;
+            backdrop-filter: blur(8px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); opacity: 0.3; transition: opacity 0.2s ease;
+            width: 200px;
+        }
+        #sidebar:hover { opacity: 1; }
+        #sidebar button {
+            height: 34px; padding: 0 12px; font-size: 12px; font-weight: 500;
+            background: #2b2e34; color: #d1d5db; border: 1px solid #3b3e44; border-radius: 6px;
+            text-align: left; white-space: nowrap; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.08s ease;
+        }
+        #sidebar button:hover:not(:disabled) { background: #383c44; color: #ffffff; border-color: #525660; }
+        #sidebar button:active { transform: translateY(1px); }
+        #sidebar button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+        /* FILE INPUT DANS LA SIDEBAR */
+        #sidebar input[type="file"] {
+            width: 100%; color: #9699a0; font-family: inherit; font-size: 12px; margin-bottom: 6px;
+        }
+        #sidebar input[type="file"]::file-selector-button {
+            width: 100%; height: 34px; margin-right: 0; padding: 0 12px; margin-bottom: 8px; display: block;
+            border: 1px solid #41444b; border-radius: 6px; background: #292c31; color: #eeeeee;
+            font-family: inherit; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
+            text-align: left; font-weight: 500; font-size: 12px;
+        }
+        #sidebar input[type="file"]::file-selector-button:hover { background: #35383e; border-color: #555961; }
+
+        /* =========================================================
+           STATUS
+        ========================================================= */
+        #status { margin-left: auto; color: #85888f; font-size: 13px; white-space: nowrap; text-align: right; }
+
+        /* =========================================================
+           MAIN & IMAGE
+        ========================================================= */
+        main {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            flex: 1; min-height: 0; overflow: hidden;
+            background: radial-gradient(circle at center, #1b1d21 0%, #111214 72%);
+        }
+        #reference {
+            display: none; max-width: 100%; max-height: 100%; object-fit: contain;
+            user-select: none; -webkit-user-drag: none; transition: transform 0.1s ease-out; transform-origin: center center;
+        }
+        #message { max-width: 650px; padding: 30px; color: #8a8d95; font-size: 18px; font-weight: 500; line-height: 1.6; text-align: center; }
+
+        /* =========================================================
+           OVERLAYS
+        ========================================================= */
+        #toastOverlay {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(10px);
+            background: rgba(0, 0, 0, 0.8); color: #ffffff; padding: 10px 22px; border-radius: 20px;
+            font-size: 15px; font-weight: 600; letter-spacing: 0.5px; pointer-events: none; opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s ease; z-index: 50; backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        #toastOverlay.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        #timer {
+            position: absolute; right: 22px; bottom: 22px; display: none; min-width: 95px; padding: 9px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; background: rgba(0, 0, 0, 0.72);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); color: white; font-size: 21px; font-weight: 600;
+            font-variant-numeric: tabular-nums; text-align: center; backdrop-filter: blur(5px); transition: all 0.3s ease;
+        }
+        #timer.warning { color: #111214; background: #f2efe9; border-color: #f2efe9; box-shadow: 0 4px 20px rgba(242, 239, 233, 0.2); }
+
+        #filename {
+            position: absolute; left: 22px; bottom: 22px; display: none; max-width: calc(100% - 180px);
+            padding: 7px 11px; border-radius: 6px; background: rgba(0, 0, 0, 0.42); color: rgba(255, 255, 255, 0.58);
+            font-size: 13px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            pointer-events: none; backdrop-filter: blur(3px);
+        }
+
+        /* =========================================================
+           MODAL BANNED IMAGES
+        ========================================================= */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;
+        }
+        .modal.open { display: flex; }
+        .modal-content { background: #1b1d20; border: 1px solid #303238; border-radius: 10px; width: 90%; max-width: 550px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); overflow: hidden; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid #303238; }
+        .modal-header h3 { margin: 0; font-size: 16px; color: #ffffff; }
+        .modal-actions { display: flex; align-items: center; gap: 12px; }
+        #unbanAllButton { height: 28px; padding: 0 10px; font-size: 12px; background: #2b2e34; border: 1px solid #3b3e44; color: #e1e3e8; border-radius: 5px; cursor: pointer; }
+        #unbanAllButton:hover { background: #383c44; color: #ffffff; }
+        .modal-close { background: transparent; border: none; color: #85888f; font-size: 22px; cursor: pointer; padding: 0 4px; height: auto; }
+        .modal-close:hover { color: #ffffff; }
+        #bannedList { padding: 15px 20px; overflow-y: auto; max-height: 60vh; display: flex; flex-direction: column; gap: 8px; }
+
+        .banned-item { display: flex; align-items: center; gap: 12px; background: #23262b; padding: 8px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; color: #d1d5db; }
+        .banned-item:hover { background: #35383e; color: #ffffff; }
+        .banned-thumb { width: 42px; height: 42px; object-fit: cover; border-radius: 4px; background: #101113; flex-shrink: 0; }
+        .banned-thumb-placeholder { width: 42px; height: 42px; border-radius: 4px; background: #101113; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #555; flex-shrink: 0; }
+        .banned-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .banned-item-action { font-size: 12px; color: #999ca3; font-weight: 600; white-space: nowrap; transition: color 0.15s ease; }
+        .banned-item:hover .banned-item-action { color: #f2efe9; }
+
+        /* =========================================================
+           RESPONSIVE
+        ========================================================= */
+        @media (max-width: 1550px) {
+            header { gap: 10px; padding: 8px; }
+            .input-container { width: 125px; }
+            #status { display: none; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- =========================================================
+         HEADER
+    ========================================================== -->
+    <header>
+        <div class="zone zone-duration" title="Duration">
+            <input id="durationInput" type="text" placeholder="10:00" value="01:00">
+        </div>
+
+        <div class="filter-zones">
+            <!-- Zone Claire (Sélection) -->
+            <div class="zone zone-light" title="Selection (Must contain)">
+                <div class="zone-group">
+                    <span class="zone-label">AND</span>
+                    <div class="input-container">
+                        <input id="andSelectInput" type="text" placeholder="male, clothed..." autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+                <div class="zone-group">
+                    <span class="zone-label">OR</span>
+                    <div class="input-container">
+                        <input id="orSelectInput" type="text" placeholder="portrait, hands..." autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zone Sombre (Discrimination/Exclusion) -->
+            <div class="zone zone-dark" title="Discrimination (Exclude if contains)">
+                <div class="zone-group">
+                    <span class="zone-label">AND</span>
+                    <div class="input-container">
+                        <input id="andExcludeInput" type="text" placeholder="female, out..." autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+                <div class="zone-group">
+                    <span class="zone-label">OR</span>
+                    <div class="input-container">
+                        <input id="orExcludeInput" type="text" placeholder="feet, head..." autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button id="goButton">Go (Space)</button>
+        <button id="pauseButton" disabled>Pause (Space)</button>
+        <span id="status">No directory selected.</span>
+    </header>
+
+    <!-- =========================================================
+         SIDEBAR CONTROLS (Includes File input now)
+    ========================================================== -->
+    <div id="sidebar">
+        <input id="folderInput" type="file" webkitdirectory directory multiple title="Browse directory">
+        <button id="nextButton" disabled>Next (D/▶)</button>
+        <button id="prevButton" disabled>Previous (Q/◀)</button>
+        <button id="banButton" disabled>Ban (X)</button>
+        <button id="bannedMenuButton">Edit bans (L)</button>
+    </div>
+
+    <!-- =========================================================
+         MAIN
+    ========================================================== -->
+    <main>
+        <div id="message">Select a directory from the bottom left panel.</div>
+        <img id="reference" alt="Reference image">
+        <div id="filename"></div>
+        <div id="toastOverlay"></div>
+        <div id="timer">01:00</div>
+    </main>
+
+    <!-- =========================================================
+         MODAL BANNED IMAGES
+    ========================================================== -->
+    <div id="bannedModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Banned Images</h3>
+                <div class="modal-actions">
+                    <button id="unbanAllButton">Unban All</button>
+                    <button id="closeModal" class="modal-close">&times;</button>
+                </div>
+            </div>
+            <div id="bannedList"></div>
+        </div>
+    </div>
+
+    <script>
+        /* =========================================================
+           DOM
+        ========================================================= */
+        const DOM = {
+            folder: document.getElementById("folderInput"),
+            duration: document.getElementById("durationInput"),
+
+            andSelect: document.getElementById("andSelectInput"),
+            orSelect: document.getElementById("orSelectInput"),
+            andExclude: document.getElementById("andExcludeInput"),
+            orExclude: document.getElementById("orExcludeInput"),
+
+            go: document.getElementById("goButton"),
+            pause: document.getElementById("pauseButton"),
+            next: document.getElementById("nextButton"),
+            prev: document.getElementById("prevButton"),
+            ban: document.getElementById("banButton"),
+            bannedMenu: document.getElementById("bannedMenuButton"),
+            bannedModal: document.getElementById("bannedModal"),
+            closeModal: document.getElementById("closeModal"),
+            unbanAll: document.getElementById("unbanAllButton"),
+            bannedList: document.getElementById("bannedList"),
+            status: document.getElementById("status"),
+            image: document.getElementById("reference"),
+            filename: document.getElementById("filename"),
+            message: document.getElementById("message"),
+            timer: document.getElementById("timer"),
+            toast: document.getElementById("toastOverlay")
+        };
+
+        /* =========================================================
+           APPLICATION STATE
+        ========================================================= */
+        const state = {
+            files: [], images: [], pool: [], queue: [],
+            position: 0, idleIndex: 0,
+            running: false, paused: false,
+            duration: 60, secondsRemaining: 60,
+            imageTimer: null, countdownTimer: null,
+            seriesId: 0, objectURL: null, currentFile: null,
+            banned: [], zoomLevel: 1, modalThumbURLs: [],
+            toastTimeout: null
+        };
+
+        const COOKIE_NAME = "drawingTimerSettingsV2";
+        const BANNED_COOKIE_NAME = "drawingTimerBanned";
+        const COOKIE_DAYS = 365;
+
+        function saveSettings() {
+            const data = {
+                durationText: DOM.duration.value,
+                andSelect: DOM.andSelect.value,
+                orSelect: DOM.orSelect.value,
+                andExclude: DOM.andExclude.value,
+                orExclude: DOM.orExclude.value
+            };
+            const expires = new Date(Date.now() + COOKIE_DAYS * 24 * 3600 * 1000).toUTCString();
+            document.cookie = COOKIE_NAME + "=" + encodeURIComponent(JSON.stringify(data)) + "; expires=" + expires + "; path=/; SameSite=Lax";
+        }
+
+        function loadSettings() {
+            const cookies = document.cookie.split(";");
+            let data = null;
+
+            let cookie = cookies.find(c => c.trim().startsWith(COOKIE_NAME + "="));
+            if (cookie) {
+                try { data = JSON.parse(decodeURIComponent(cookie.trim().substring(COOKIE_NAME.length + 1))); } catch (e) {}
+            } else {
+                let oldCookie = cookies.find(c => c.trim().startsWith("drawingTimerSettings="));
+                if (oldCookie) {
+                    try {
+                        let oldData = JSON.parse(decodeURIComponent(oldCookie.trim().substring("drawingTimerSettings".length + 1)));
+                        data = {
+                            durationText: oldData.durationText,
+                            andSelect: oldData.andTags || oldData.tags || "",
+                            orSelect: oldData.orTags || "",
+                            andExclude: "",
+                            orExclude: oldData.notTags || ""
+                        };
+                    } catch (e) {}
+                }
+            }
+
+            if (!data) return;
+
+            if (data.durationText && data.durationText.trim().length > 0) DOM.duration.value = data.durationText;
+            if (data.andSelect !== undefined) DOM.andSelect.value = data.andSelect;
+            if (data.orSelect !== undefined) DOM.orSelect.value = data.orSelect;
+            if (data.andExclude !== undefined) DOM.andExclude.value = data.andExclude;
+            if (data.orExclude !== undefined) DOM.orExclude.value = data.orExclude;
+        }
+
+        function saveBannedImages() {
+            const expires = new Date(Date.now() + COOKIE_DAYS * 24 * 3600 * 1000).toUTCString();
+            document.cookie = BANNED_COOKIE_NAME + "=" + encodeURIComponent(JSON.stringify(state.banned)) + "; expires=" + expires + "; path=/; SameSite=Lax";
+        }
+
+        function loadBannedImages() {
+            const cookies = document.cookie.split(";");
+            const cookie = cookies.find(c => c.trim().startsWith(BANNED_COOKIE_NAME + "="));
+            if (!cookie) return;
+            try {
+                const data = JSON.parse(decodeURIComponent(cookie.trim().substring(BANNED_COOKIE_NAME.length + 1)));
+                if (Array.isArray(data)) state.banned = data;
+            } catch (error) {}
+        }
+
+        function parseTimeToSeconds(inputStr) {
+            if (!inputStr) return 60;
+            const str = String(inputStr).trim();
+            if (!str.includes(":")) {
+                const num = parseFloat(str);
+                return (!isNaN(num) && num > 0) ? num : 60;
+            }
+            const parts = str.split(":").map(p => parseFloat(p.trim()));
+            if (parts.some(isNaN)) return 60;
+            if (parts.length === 2) return (parts[0] * 60) + parts[1];
+            if (parts.length === 3) return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+            return 60;
+        }
+
+        function formatSecondsToTimeInput(totalSeconds) {
+            const hrs = Math.floor(totalSeconds / 3600);
+            const mins = Math.floor((totalSeconds % 3600) / 60);
+            const secs = Math.floor(totalSeconds % 60);
+            if (hrs > 0) return `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            return `${mins}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function showToast(text) {
+            DOM.toast.textContent = text;
+            DOM.toast.classList.add("show");
+            if (state.toastTimeout !== null) clearTimeout(state.toastTimeout);
+            state.toastTimeout = setTimeout(() => { DOM.toast.classList.remove("show"); }, 1000);
+        }
+
+        function normalizeText(text) {
+            return String(text).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+        }
+
+        function getTags(inputEl) {
+            return inputEl.value.split(",").map(normalizeText).filter(tag => tag.length > 0);
+        }
+
+        async function canDecodeAsImage(file) {
+            const url = URL.createObjectURL(file);
+            try {
+                const testImage = new Image();
+                testImage.src = url;
+                await testImage.decode();
+                return true;
+            } catch { return false; } finally { URL.revokeObjectURL(url); }
+        }
+
+        async function loadDirectory(fileList) {
+            stopSeries();
+            state.files = Array.from(fileList);
+            state.images = []; state.pool = []; state.queue = [];
+            state.position = 0; state.idleIndex = 0;
+
+            hideImage();
+            showMessage(`Loading ${state.files.length} files... Please wait.`);
+            DOM.status.textContent = `${state.files.length} files — loading...`;
+
+            const results = await Promise.all(state.files.map(async file => {
+                return { file, valid: await canDecodeAsImage(file) };
+            }));
+
+            if (DOM.folder.files.length !== state.files.length) return;
+
+            state.images = results.filter(r => r.valid).map(r => r.file);
+
+            updatePool();
+            updateIdleStatus();
+            updateActionButtons();
+
+            if (state.files.length === 0) { hideImage(); showMessage("No file selected."); return; }
+            if (state.images.length === 0) { hideImage(); showMessage("No readable image has been found."); return; }
+            if (state.pool.length === 0) { hideImage(); showMessage("No images matching those tags."); return; }
+
+            showPreview();
+        }
+
+        function updatePool() {
+            const andSelect = getTags(DOM.andSelect);
+            const orSelect = getTags(DOM.orSelect);
+            const andExclude = getTags(DOM.andExclude);
+            const orExclude = getTags(DOM.orExclude);
+
+            state.pool = state.images.filter(file => {
+                if (state.banned.includes(file.name)) return false;
+
+                const filename = normalizeText(file.name);
+
+                if (andSelect.length > 0 && !andSelect.every(tag => filename.includes(tag))) return false;
+                if (orSelect.length > 0 && !orSelect.some(tag => filename.includes(tag))) return false;
+                if (andExclude.length > 0 && andExclude.every(tag => filename.includes(tag))) return false;
+                if (orExclude.length > 0 && orExclude.some(tag => filename.includes(tag))) return false;
+
+                return true;
+            });
+        }
+
+        function updateIdleStatus() {
+            if (state.files.length === 0) { DOM.status.textContent = "No directory selected."; return; }
+            DOM.status.textContent = `${state.pool.length} / ${state.images.length} images · ${state.files.length} files`;
+        }
+
+        function updateRunningStatus() {
+            DOM.status.textContent = `${state.position} / ${state.queue.length}`;
+        }
+
+        function showPreview() {
+            if (state.pool.length === 0) return;
+            state.idleIndex = Math.floor(Math.random() * state.pool.length);
+            showImage(state.pool[state.idleIndex]);
+        }
+
+        function nextImage() {
+            if (state.running) {
+                clearImageTimer(); clearCountdownTimer();
+                state.seriesId++;
+                if (state.paused) { state.paused = false; DOM.pause.textContent = "Pause (Space)"; }
+                showNextImage(state.seriesId);
+            } else {
+                if (state.pool.length === 0) return;
+                state.idleIndex = (state.idleIndex + 1) % state.pool.length;
+                showImage(state.pool[state.idleIndex]);
+            }
+        }
+
+        function prevImage() {
+            if (state.running) {
+                let targetPos = state.position - 2;
+                while (targetPos >= 0 && state.banned.includes(state.queue[targetPos].name)) targetPos--;
+                if (targetPos >= 0) {
+                    state.position = targetPos;
+                    clearImageTimer(); clearCountdownTimer();
+                    state.seriesId++;
+                    if (state.paused) { state.paused = false; DOM.pause.textContent = "Pause (Space)"; }
+                    showNextImage(state.seriesId);
+                }
+            } else {
+                if (state.pool.length === 0) return;
+                state.idleIndex = (state.idleIndex - 1 + state.pool.length) % state.pool.length;
+                showImage(state.pool[state.idleIndex]);
+            }
+        }
+
+        function resetZoom() {
+            state.zoomLevel = 1;
+            DOM.image.style.transformOrigin = "center center";
+            DOM.image.style.transform = "scale(1)";
+        }
+
+        function showImage(file) {
+            releaseObjectURL();
+            state.currentFile = file;
+            resetZoom();
+            const url = URL.createObjectURL(file);
+            state.objectURL = url;
+            DOM.image.src = url;
+            DOM.image.style.display = "block";
+            DOM.filename.textContent = file.name;
+            DOM.filename.style.display = "block";
+            DOM.message.style.display = "none";
+            updateActionButtons();
+        }
+
+        function hideImage() {
+            state.currentFile = null;
+            resetZoom();
+            DOM.image.style.display = "none";
+            DOM.image.removeAttribute("src");
+            DOM.filename.style.display = "none";
+            DOM.filename.textContent = "";
+            releaseObjectURL();
+            updateActionButtons();
+        }
+
+        function showMessage(text) {
+            DOM.message.textContent = text;
+            DOM.message.style.display = "block";
+        }
+
+        function releaseObjectURL() {
+            if (state.objectURL !== null) { URL.revokeObjectURL(state.objectURL); state.objectURL = null; }
+        }
+
+        DOM.image.parentElement.addEventListener("wheel", event => {
+            if (DOM.image.style.display === "none") return;
+            event.preventDefault();
+            const rect = DOM.image.getBoundingClientRect();
+            const originX = ((event.clientX - rect.left) / rect.width) * 100;
+            const originY = ((event.clientY - rect.top) / rect.height) * 100;
+            const delta = event.deltaY < 0 ? 0.15 : -0.15;
+            const newZoom = Math.max(1, Math.min(5, state.zoomLevel + delta));
+            DOM.image.style.transformOrigin = newZoom === 1 ? "center center" : `${originX}% ${originY}%`;
+            state.zoomLevel = newZoom;
+            DOM.image.style.transform = `scale(${state.zoomLevel})`;
+        }, { passive: false });
+
+        function shuffle(array) {
+            const result = [...array];
+            for (let i = result.length - 1; i > 0; i--) {
+                const r = Math.floor(Math.random() * (i + 1));
+                [result[i], result[r]] = [result[r], result[i]];
+            }
+            return result;
+        }
+
+        function formatDuration(seconds) {
+            const t = Math.max(0, Math.ceil(seconds));
+            const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+            if (h > 0) return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+            return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+        }
+
+        function startSeries() {
+            updatePool();
+            if (state.images.length === 0) { alert("Select a directory first."); return; }
+            if (state.pool.length === 0) { alert("No matching image."); updateIdleStatus(); return; }
+            const duration = parseTimeToSeconds(DOM.duration.value);
+            if (!duration || duration <= 0) { alert("Time must be greater than 0."); return; }
+
+            state.duration = duration; saveSettings();
+            state.queue = shuffle(state.pool);
+            state.position = 0; state.seriesId++;
+            state.running = true; state.paused = false;
+
+            DOM.go.textContent = "Stop (K)";
+            DOM.pause.textContent = "Pause (Space)";
+            updateActionButtons();
+            showNextImage(state.seriesId);
+            showToast("Playing");
+        }
+
+        function showNextImage(seriesId) {
+            if (seriesId !== state.seriesId || !state.running) return;
+            while (state.position < state.queue.length && state.banned.includes(state.queue[state.position].name)) state.position++;
+            if (state.position >= state.queue.length) { finishSeries(); return; }
+
+            showImage(state.queue[state.position]);
+            state.position++;
+            startCountdown(seriesId);
+            updateRunningStatus();
+            scheduleNextImage(seriesId);
+        }
+
+        function scheduleNextImage(seriesId, delaySeconds) {
+            clearImageTimer();
+            const delay = (delaySeconds !== undefined ? delaySeconds : state.duration) * 1000;
+            state.imageTimer = setTimeout(() => {
+                if (seriesId !== state.seriesId || !state.running || state.paused) return;
+                showNextImage(seriesId);
+            }, delay);
+        }
+
+        function startCountdown(seriesId) {
+            state.secondsRemaining = state.duration;
+            runCountdown(seriesId);
+        }
+
+        function runCountdown(seriesId) {
+            clearCountdownTimer();
+            updateTimerDisplay();
+            DOM.timer.style.display = "block";
+            state.countdownTimer = setInterval(() => {
+                if (seriesId !== state.seriesId || !state.running || state.paused) return;
+                state.secondsRemaining--;
+                if (state.secondsRemaining < 0) state.secondsRemaining = 0;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            DOM.timer.textContent = formatDuration(state.secondsRemaining);
+            if (state.secondsRemaining <= state.duration * 0.1) DOM.timer.classList.add("warning");
+            else DOM.timer.classList.remove("warning");
+        }
+
+        function togglePause() {
+            if (!state.running) return;
+            state.paused = !state.paused;
+            if (state.paused) {
+                clearImageTimer(); clearCountdownTimer();
+                DOM.pause.textContent = "Play (Space)";
+                showToast("Paused");
+            } else {
+                DOM.pause.textContent = "Pause (Space)";
+                runCountdown(state.seriesId);
+                scheduleNextImage(state.seriesId, state.secondsRemaining);
+                showToast("Playing");
+            }
+        }
+
+        function banCurrentImage() {
+            if (!state.currentFile) return;
+            const fileName = state.currentFile.name;
+            if (!state.banned.includes(fileName)) {
+                state.banned.push(fileName);
+                saveBannedImages();
+                updatePool();
+            }
+            if (state.running) nextImage();
+            else {
+                updateIdleStatus();
+                if (state.pool.length > 0) nextImage();
+                else { hideImage(); showMessage("No images matching those tags."); }
+            }
+        }
+
+        function unbanImage(fileName) {
+            state.banned = state.banned.filter(name => name !== fileName);
+            saveBannedImages(); renderBannedList(); updatePool(); updateIdleStatus();
+        }
+
+        function unbanAllImages() {
+            if (state.banned.length === 0) return;
+            state.banned = [];
+            saveBannedImages(); renderBannedList(); updatePool(); updateIdleStatus();
+        }
+
+        function clearModalThumbURLs() {
+            state.modalThumbURLs.forEach(url => URL.revokeObjectURL(url));
+            state.modalThumbURLs = [];
+        }
+
+        function renderBannedList() {
+            clearModalThumbURLs();
+            DOM.bannedList.innerHTML = "";
+            if (state.banned.length === 0) {
+                DOM.bannedList.innerHTML = '<div style="color:#777; text-align:center; padding:20px;">No banned images</div>';
+                return;
+            }
+            state.banned.forEach(fileName => {
+                const item = document.createElement("div");
+                item.className = "banned-item";
+                const matchedFile = state.images.find(f => f.name === fileName);
+                let thumbHTML = "";
+                if (matchedFile) {
+                    const url = URL.createObjectURL(matchedFile);
+                    state.modalThumbURLs.push(url);
+                    thumbHTML = `<img src="${url}" class="banned-thumb" alt="">`;
+                } else {
+                    thumbHTML = `<div class="banned-thumb-placeholder">N/A</div>`;
+                }
+                item.innerHTML = `${thumbHTML}<span class="banned-item-name" title="${fileName}">${fileName}</span><span class="banned-item-action">Click to Unban</span>`;
+                item.addEventListener("click", () => unbanImage(fileName));
+                DOM.bannedList.appendChild(item);
+            });
+        }
+
+        function toggleBannedModal() {
+            if (DOM.bannedModal.classList.contains("open")) {
+                DOM.bannedModal.classList.remove("open"); clearModalThumbURLs();
+            } else {
+                renderBannedList(); DOM.bannedModal.classList.add("open");
+            }
+        }
+
+        function stopSeries() {
+            state.seriesId++; state.running = false; state.paused = false;
+            clearImageTimer(); clearCountdownTimer();
+            DOM.go.textContent = "Go (Space)"; DOM.pause.textContent = "Pause (Space)";
+            DOM.timer.style.display = "none"; DOM.timer.classList.remove("warning");
+            updateActionButtons(); showToast("Stopped");
+        }
+
+        function finishSeries() {
+            clearImageTimer(); clearCountdownTimer();
+            state.running = false; state.paused = false;
+            DOM.go.textContent = "Go (Space)"; DOM.pause.textContent = "Pause (Space)";
+            DOM.timer.style.display = "none"; DOM.timer.classList.remove("warning");
+            updateActionButtons();
+            DOM.status.textContent = `${state.queue.length} / ${state.queue.length} — Done.`;
+            showToast("Finished");
+        }
+
+        function clearImageTimer() { if (state.imageTimer !== null) { clearTimeout(state.imageTimer); state.imageTimer = null; } }
+        function clearCountdownTimer() { if (state.countdownTimer !== null) { clearInterval(state.countdownTimer); state.countdownTimer = null; } }
+
+        function updateActionButtons() {
+            const hasCurrent = Boolean(state.currentFile);
+            const hasImages = state.pool.length > 0 || state.running;
+            DOM.pause.disabled = !state.running;
+            DOM.next.disabled = !hasImages;
+            DOM.prev.disabled = !hasImages;
+            DOM.ban.disabled = !hasCurrent;
+        }
+
+        function handleTagsChange() {
+            saveSettings();
+            if (state.running) return;
+            updatePool(); updateIdleStatus();
+            if (state.images.length > 0 && state.pool.length === 0) { hideImage(); showMessage("No image matching with these tags."); return; }
+            if (state.pool.length > 0) showPreview();
+        }
+
+        DOM.andSelect.addEventListener("input", handleTagsChange);
+        DOM.orSelect.addEventListener("input", handleTagsChange);
+        DOM.andExclude.addEventListener("input", handleTagsChange);
+        DOM.orExclude.addEventListener("input", handleTagsChange);
+
+        DOM.duration.addEventListener("change", () => { state.duration = parseTimeToSeconds(DOM.duration.value); saveSettings(); });
+        DOM.folder.addEventListener("change", async () => { await loadDirectory(DOM.folder.files); });
+
+        DOM.go.addEventListener("click", () => { if (state.running) { stopSeries(); updateIdleStatus(); return; } startSeries(); });
+        DOM.pause.addEventListener("click", togglePause);
+        DOM.next.addEventListener("click", nextImage);
+        DOM.prev.addEventListener("click", prevImage);
+        DOM.ban.addEventListener("click", banCurrentImage);
+        DOM.bannedMenu.addEventListener("click", toggleBannedModal);
+        DOM.unbanAll.addEventListener("click", unbanAllImages);
+        DOM.closeModal.addEventListener("click", toggleBannedModal);
+        DOM.bannedModal.addEventListener("click", event => { if (event.target === DOM.bannedModal) toggleBannedModal(); });
+
+        document.addEventListener("keydown", event => {
+            const active = document.activeElement;
+            if (active && (active.tagName === "INPUT" || active.tagName === "SELECT" || active.tagName === "TEXTAREA")) return;
+
+            const key = event.key.toLowerCase();
+            if (event.code === "Space" || event.key === " ") { event.preventDefault(); if (!state.running) startSeries(); else togglePause(); return; }
+            if (key === "k") { event.preventDefault(); if (state.running) { stopSeries(); updateIdleStatus(); } return; }
+            if (key === "q" || event.code === "ArrowLeft") { event.preventDefault(); prevImage(); return; }
+            if (key === "d" || event.code === "ArrowRight") { event.preventDefault(); nextImage(); return; }
+            if (key === "x") { event.preventDefault(); banCurrentImage(); return; }
+            if (key === "l") { event.preventDefault(); toggleBannedModal(); return; }
+        });
+
+        loadSettings(); loadBannedImages(); updateActionButtons();
+    </script>
+</body>
+</html>
