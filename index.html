@@ -7,7 +7,7 @@
     <title>Drawing Timer</title>
     <style>
         /* =========================================================
-           RESET
+           RESET & GLOBAL
         ========================================================= */
         * { box-sizing: border-box; }
         html, body { width: 100%; height: 100%; margin: 0; }
@@ -27,91 +27,50 @@
             flex-wrap: wrap; justify-content: center;
         }
 
-        .filter-zones {
-            display: flex; gap: 12px; align-items: center;
-        }
+        .filter-zones { display: flex; gap: 12px; align-items: center; }
+        .zone { display: flex; align-items: center; gap: 0px; padding: 4px 6px; border-radius: 10px; height: 48px; border: none; }
+        .zone-group { display: flex; align-items: center; gap: 6px; }
+        .zone-label { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; width: 30px; text-align: right; }
 
-        .zone {
-            display: flex; align-items: center; gap: 0px; padding: 4px 6px; border-radius: 10px; height: 48px; border: none;
-        }
-
-        .zone-group {
-            display: flex; align-items: center; gap: 6px;
-        }
-
-        .zone-label {
-            font-size: 11px; font-weight: 700; letter-spacing: 0.5px; width: 30px; text-align: right;
-        }
-
-        /* Zone Claire (Sélection) */
-        .zone-light {
-            background: #f2efe9;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .zone-light .input-container {
-            background: #ffffff; border: 1px solid #d8d4cc;
-        }
-
+        .zone-light { background: #f2efe9; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+        .zone-light .input-container { background: #ffffff; border: 1px solid #d8d4cc; }
         .zone-light input { color: #111214; }
         .zone-light input::placeholder { color: #9a9b9e; }
         .zone-light .zone-label { color: #55534e; }
 
-        /* Zone Sombre (Discrimination/Exclusion) */
-        .zone-dark {
-            background: #111214;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
-        }
-
-        .zone-dark .input-container {
-            background: #1a1c20; border: 1px solid #3b3e44;
-        }
-
+        .zone-dark { background: #111214; box-shadow: inset 0 1px 3px rgba(0,0,0,0.4); }
+        .zone-dark .input-container { background: #1a1c20; border: 1px solid #3b3e44; }
         .zone-dark input { color: #ffffff; }
         .zone-dark input::placeholder { color: #60636a; }
         .zone-dark .zone-label { color: #9699a0; }
 
-        /* Zone Duration (Temps) */
         .zone-duration {
-            background: #1a1c20;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
-            border: 1px solid #303238;
-            align-items: center;
-            height: 48px;
-            padding: 6px;
+            background: #1a1c20; box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+            border: 1px solid #303238; align-items: center; height: 48px; padding: 6px;
         }
 
-        /* Input Containers */
         .input-container {
             position: relative; width: 200px; height: 36px; border-radius: 7px; overflow: hidden;
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
-
         .input-container:focus-within {
             border-color: #4f8cff !important;
             box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12) !important;
         }
-
         .input-container input {
             position: relative; z-index: 2; width: 100%; height: 100%; padding: 0 12px;
             border: none; background: transparent; outline: none; font-size: 14px; font-family: inherit;
         }
 
-        /* =========================================================
-           OTHER INPUTS
-        ========================================================= */
-        input[type="number"], input[type="text"]:not(.input-container input) {
+        #durationInput {
             height: 36px; border: 1px solid #3b3e44; border-radius: 7px;
             background: #101113; color: #ffffff; outline: none; font-family: inherit;
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            width: 75px; padding: 0 10px; text-align: center; font-size: 14px; font-variant-numeric: tabular-nums;
         }
-        #durationInput { width: 75px; padding: 0 10px; text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; }
         #durationInput:focus { border-color: #4f8cff; box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12); }
         #durationInput::placeholder { color: #60636a; }
 
-        /* =========================================================
-           HEADER BUTTONS
-        ========================================================= */
         header button {
             height: 48px; padding: 0 20px; border: 1px solid #3b3e44; border-radius: 10px;
             background: #2b2e34; color: #e1e3e8; font-family: inherit; font-size: 14px; font-weight: 600;
@@ -124,43 +83,7 @@
         #goButton { background: #f2efe9; color: #111214; border-color: #f2efe9; }
         #goButton:hover:not(:disabled) { background: #e2dfd9; border-color: #e2dfd9; color: #111214; }
 
-        /* =========================================================
-           FLOATING SIDEBAR CONTROLS (Bottom Left)
-        ========================================================= */
-        #sidebar {
-            position: absolute; left: 22px; bottom: 65px; display: flex; flex-direction: column; gap: 8px; z-index: 20;
-            background: rgba(27, 29, 32, 0.85); border: 1px solid #303238; padding: 14px; border-radius: 10px;
-            backdrop-filter: blur(8px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); opacity: 0.3; transition: opacity 0.2s ease;
-            width: 200px;
-        }
-        #sidebar:hover { opacity: 1; }
-        #sidebar button {
-            height: 34px; padding: 0 12px; font-size: 12px; font-weight: 500;
-            background: #2b2e34; color: #d1d5db; border: 1px solid #3b3e44; border-radius: 6px;
-            text-align: left; white-space: nowrap; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.08s ease;
-        }
-        #sidebar button:hover:not(:disabled) { background: #383c44; color: #ffffff; border-color: #525660; }
-        #sidebar button:active { transform: translateY(1px); }
-        #sidebar button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-
-        /* FILE INPUT DANS LA SIDEBAR */
-        #sidebar input[type="file"] {
-            width: 100%; color: #9699a0; font-family: inherit; font-size: 12px; margin-bottom: 6px;
-        }
-        #sidebar input[type="file"]::file-selector-button {
-            width: 100%; height: 34px; margin-right: 0; padding: 0 12px; margin-bottom: 8px; display: block;
-            border: 1px solid #41444b; border-radius: 6px; background: #292c31; color: #eeeeee;
-            font-family: inherit; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
-            text-align: left; font-weight: 500; font-size: 12px;
-        }
-        #sidebar input[type="file"]::file-selector-button:hover { background: #35383e; border-color: #555961; }
-
-        /* =========================================================
-           STATUS & UNKNOWN FILES BUTTON CONTAINER
-        ========================================================= */
-        #status-container {
-            margin-left: auto; display: flex; align-items: center; gap: 8px;
-        }
+        #status-container { margin-left: auto; display: flex; align-items: center; gap: 8px; }
         #status { color: #85888f; font-size: 13px; white-space: nowrap; text-align: right; }
         
         #unknownFilesBtn {
@@ -173,18 +96,73 @@
         #unknownFilesBtn:disabled { opacity: 0.35; cursor: not-allowed; }
 
         /* =========================================================
-           MAIN & IMAGE
+           FLOATING SIDEBAR CONTROLS
+        ========================================================= */
+        #sidebar {
+            position: absolute; left: 22px; bottom: 65px; display: flex; flex-direction: column; gap: 8px; z-index: 20;
+            background: rgba(27, 29, 32, 0.85); border: 1px solid #303238; padding: 14px; border-radius: 10px;
+            backdrop-filter: blur(8px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); opacity: 0.3; transition: opacity 0.2s ease;
+            width: 160px;
+        }
+        #sidebar:hover { opacity: 1; }
+        #sidebar button {
+            height: 34px; padding: 0 12px; font-size: 12px; font-weight: 500;
+            background: #2b2e34; color: #d1d5db; border: 1px solid #3b3e44; border-radius: 6px;
+            text-align: left; white-space: nowrap; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.08s ease;
+        }
+        #sidebar button:hover:not(:disabled) { background: #383c44; color: #ffffff; border-color: #525660; }
+        #sidebar button:active { transform: translateY(1px); }
+        #sidebar button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+        /* FILE INPUT */
+        #sidebar input[type="file"] {
+            width: 100%; color: transparent; font-family: inherit; font-size: 12px; margin-bottom: 0; height: 34px;
+        }
+        #sidebar input[type="file"]::file-selector-button {
+            width: 100%; height: 34px; margin-right: 0; padding: 0 12px; margin-bottom: 0; display: block;
+            border: 1px solid #f2efe9; border-radius: 6px; background: #f2efe9; color: #111214;
+            font-family: inherit; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
+            text-align: left; font-weight: 600; font-size: 12px;
+        }
+        #sidebar input[type="file"]::file-selector-button:hover { background: #e2dfd9; border-color: #e2dfd9; }
+
+        /* SWITCH */
+        .switch-container {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 12px; color: #d1d5db; cursor: pointer; padding: 4px 0; margin-bottom: 0; margin-top: 4px; user-select: none;
+        }
+        .switch-input { display: none; }
+        .switch-track {
+            width: 34px; height: 20px; background: #2b2e34; border: 1px solid #3b3e44;
+            border-radius: 10px; position: relative; transition: background 0.15s ease, border-color 0.15s ease;
+        }
+        .switch-thumb {
+            width: 14px; height: 14px; background: #85888f; border-radius: 50%;
+            position: absolute; top: 2px; left: 2px; transition: transform 0.15s ease, background 0.15s ease;
+        }
+        .switch-input:checked + .switch-track { background: #4f545c; border-color: #686d76; }
+        .switch-input:checked + .switch-track .switch-thumb { transform: translateX(14px); background: #ffffff; }
+
+        /* =========================================================
+           MAIN & VIEWER
         ========================================================= */
         main {
             position: relative; display: flex; align-items: center; justify-content: center;
-            flex: 1; min-height: 0; overflow: hidden;
-            background: radial-gradient(circle at center, #1b1d21 0%, #111214 72%);
+            flex: 1; min-height: 0; overflow: hidden; background: radial-gradient(circle at center, #1b1d21 0%, #111214 72%);
         }
         #reference {
             display: none; max-width: 100%; max-height: 100%; object-fit: contain;
             user-select: none; -webkit-user-drag: none; transition: transform 0.1s ease-out; transform-origin: center center;
         }
         #message { max-width: 650px; padding: 30px; color: #8a8d95; font-size: 18px; font-weight: 500; line-height: 1.6; text-align: center; }
+        
+        #loading {
+            position: absolute; display: none;
+            color: #8a8d95; font-size: 18px; font-weight: 500; letter-spacing: 1px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
         /* =========================================================
            OVERLAYS
@@ -214,7 +192,7 @@
         }
 
         /* =========================================================
-           MODALS (BANNED & UNKNOWN FILES)
+           MODALS
         ========================================================= */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -225,25 +203,27 @@
         .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid #303238; }
         .modal-header h3 { margin: 0; font-size: 16px; color: #ffffff; }
         .modal-actions { display: flex; align-items: center; gap: 12px; }
-        #unbanAllButton { height: 28px; padding: 0 10px; font-size: 12px; background: #2b2e34; border: 1px solid #3b3e44; color: #e1e3e8; border-radius: 5px; cursor: pointer; }
-        #unbanAllButton:hover { background: #383c44; color: #ffffff; }
+        #unbanAllButton, #unfavAllButton { height: 28px; padding: 0 10px; font-size: 12px; background: #2b2e34; border: 1px solid #3b3e44; color: #e1e3e8; border-radius: 5px; cursor: pointer; }
+        #unbanAllButton:hover, #unfavAllButton:hover { background: #383c44; color: #ffffff; }
         .modal-close { background: transparent; border: none; color: #85888f; font-size: 22px; cursor: pointer; padding: 0 4px; height: auto; }
         .modal-close:hover { color: #ffffff; }
         
-        #bannedList, #unknownList { padding: 15px 20px; overflow-y: auto; max-height: 60vh; display: flex; flex-direction: column; gap: 8px; }
+        #bannedList, #favList, #unknownList { padding: 15px 20px; overflow-y: auto; max-height: 60vh; display: flex; flex-direction: column; gap: 8px; }
 
-        .banned-item, .unknown-item { display: flex; align-items: center; gap: 12px; background: #23262b; padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #d1d5db; }
-        .banned-item { cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
-        .banned-item:hover { background: #35383e; color: #ffffff; }
-        .banned-thumb { width: 42px; height: 42px; object-fit: cover; border-radius: 4px; background: #101113; flex-shrink: 0; }
-        .banned-thumb-placeholder { width: 42px; height: 42px; border-radius: 4px; background: #101113; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #555; flex-shrink: 0; }
-        .banned-item-name, .unknown-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .banned-item-action { font-size: 12px; color: #999ca3; font-weight: 600; white-space: nowrap; transition: color 0.15s ease; }
-        .banned-item:hover .banned-item-action { color: #f2efe9; }
+        .banned-item, .fav-item, .unknown-item { display: flex; align-items: center; gap: 12px; background: #23262b; padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #d1d5db; }
+        .banned-item:hover, .fav-item:hover { background: #35383e; color: #ffffff; }
+        
+        .banned-thumb, .fav-thumb { width: 42px; height: 42px; object-fit: cover; border-radius: 4px; background: #101113; flex-shrink: 0; cursor: pointer; transition: opacity 0.15s; }
+        .banned-thumb:hover, .fav-thumb:hover { opacity: 0.8; }
+        .banned-thumb-placeholder, .fav-thumb-placeholder { width: 42px; height: 42px; border-radius: 4px; background: #101113; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #555; flex-shrink: 0; }
+        .banned-item-name, .fav-item-name, .unknown-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        
+        .remove-btn {
+            background: #2b2e34; border: 1px solid #3b3e44; color: #e1e3e8; border-radius: 5px;
+            padding: 4px 10px; font-size: 11px; cursor: pointer; transition: background 0.15s, color 0.15s;
+        }
+        .remove-btn:hover { background: #d93838; color: #ffffff; border-color: #d93838; }
 
-        /* =========================================================
-           RESPONSIVE
-        ========================================================= */
         @media (max-width: 1550px) {
             header { gap: 10px; padding: 8px; }
             .input-container { width: 125px; }
@@ -262,7 +242,6 @@
         </div>
 
         <div class="filter-zones">
-            <!-- Zone Claire (Sélection) -->
             <div class="zone zone-light" title="Selection (Must contain)">
                 <div class="zone-group">
                     <span class="zone-label">AND</span>
@@ -278,7 +257,6 @@
                 </div>
             </div>
 
-            <!-- Zone Sombre (Discrimination/Exclusion) -->
             <div class="zone zone-dark" title="Discrimination (Exclude if contains)">
                 <div class="zone-group">
                     <span class="zone-label">AND</span>
@@ -297,6 +275,9 @@
 
         <button id="goButton">Go (Space)</button>
         <button id="pauseButton" disabled>Pause (Space)</button>
+        <button id="prevButton" disabled>◀ (Q)</button>
+        <button id="nextButton" disabled>▶ (D)</button>
+
         <div id="status-container">
             <span id="status">No directory selected.</span>
             <button id="unknownFilesBtn" title="View files not recognized as images" disabled>?</button>
@@ -308,10 +289,17 @@
     ========================================================== -->
     <div id="sidebar">
         <input id="folderInput" type="file" webkitdirectory directory multiple title="Browse directory">
-        <button id="nextButton" disabled>Next (D/▶)</button>
-        <button id="prevButton" disabled>Previous (Q/◀)</button>
+        
         <button id="banButton" disabled>Ban (X)</button>
-        <button id="bannedMenuButton">Edit bans (L)</button>
+        <button id="bannedMenuButton">Banned (L)</button>
+        <button id="favButton" disabled>Favorite (F)</button>
+        <button id="favMenuButton">Favorites (M)</button>
+
+        <label class="switch-container" title="Show only favorite images">
+            <span>Only Favorites</span>
+            <input type="checkbox" id="onlyFavCheckbox" class="switch-input">
+            <div class="switch-track"><div class="switch-thumb"></div></div>
+        </label>
     </div>
 
     <!-- =========================================================
@@ -319,6 +307,7 @@
     ========================================================== -->
     <main>
         <div id="message">Select a directory from the bottom left panel.</div>
+        <div id="loading">Loading...</div>
         <img id="reference" alt="Reference image">
         <div id="filename"></div>
         <div id="toastOverlay"></div>
@@ -326,7 +315,7 @@
     </main>
 
     <!-- =========================================================
-         MODAL BANNED IMAGES
+         MODALS
     ========================================================== -->
     <div id="bannedModal" class="modal">
         <div class="modal-content">
@@ -341,9 +330,19 @@
         </div>
     </div>
 
-    <!-- =========================================================
-         MODAL UNKNOWN FILES
-    ========================================================== -->
+    <div id="favModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Favourite Images</h3>
+                <div class="modal-actions">
+                    <button id="unfavAllButton">Clear All</button>
+                    <button id="closeFavModal" class="modal-close">&times;</button>
+                </div>
+            </div>
+            <div id="favList"></div>
+        </div>
+    </div>
+
     <div id="unknownModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -356,125 +355,128 @@
 
     <script>
         /* =========================================================
-           DOM
+           INDEXEDDB PERSISTENCE FOR FILES
         ========================================================= */
-        const DOM = {
-            folder: document.getElementById("folderInput"),
-            duration: document.getElementById("durationInput"),
+        const DB_NAME = "DrawingTimerDB";
+        const STORE_NAME = "filesStore";
 
-            andSelect: document.getElementById("andSelectInput"),
-            orSelect: document.getElementById("orSelectInput"),
-            andExclude: document.getElementById("andExcludeInput"),
-            orExclude: document.getElementById("orExcludeInput"),
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onupgradeneeded = event => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+                };
+                request.onsuccess = event => resolve(event.target.result);
+                request.onerror = event => reject(event.target.error);
+            });
+        }
 
-            go: document.getElementById("goButton"),
-            pause: document.getElementById("pauseButton"),
-            next: document.getElementById("nextButton"),
-            prev: document.getElementById("prevButton"),
-            ban: document.getElementById("banButton"),
-            bannedMenu: document.getElementById("bannedMenuButton"),
-            bannedModal: document.getElementById("bannedModal"),
-            closeModal: document.getElementById("closeModal"),
-            unbanAll: document.getElementById("unbanAllButton"),
-            bannedList: document.getElementById("bannedList"),
-            
-            unknownBtn: document.getElementById("unknownFilesBtn"),
-            unknownModal: document.getElementById("unknownModal"),
-            closeUnknownModal: document.getElementById("closeUnknownModal"),
-            unknownList: document.getElementById("unknownList"),
+        async function saveFilesToIDB(files) {
+            try {
+                const db = await openDB();
+                const tx = db.transaction(STORE_NAME, "readwrite");
+                const store = tx.objectStore(STORE_NAME);
+                store.clear();
+                for (let i = 0; i < files.length; i++) store.put(files[i], i);
+                await new Promise((resolve, reject) => {
+                    tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+                });
+            } catch (e) { console.error("Error saving files", e); }
+        }
 
-            status: document.getElementById("status"),
-            image: document.getElementById("reference"),
-            filename: document.getElementById("filename"),
-            message: document.getElementById("message"),
-            timer: document.getElementById("timer"),
-            toast: document.getElementById("toastOverlay")
-        };
+        async function loadFilesFromIDB() {
+            try {
+                const db = await openDB();
+                const tx = db.transaction(STORE_NAME, "readonly");
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.getAll();
+                return new Promise((resolve, reject) => {
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            } catch (e) { return []; }
+        }
 
         /* =========================================================
-           APPLICATION STATE
+           DOM & STATE
         ========================================================= */
+        const DOM = {
+            folder: document.getElementById("folderInput"), duration: document.getElementById("durationInput"),
+            onlyFavCheckbox: document.getElementById("onlyFavCheckbox"),
+            andSelect: document.getElementById("andSelectInput"), orSelect: document.getElementById("orSelectInput"),
+            andExclude: document.getElementById("andExcludeInput"), orExclude: document.getElementById("orExcludeInput"),
+            go: document.getElementById("goButton"), pause: document.getElementById("pauseButton"),
+            next: document.getElementById("nextButton"), prev: document.getElementById("prevButton"),
+            ban: document.getElementById("banButton"), bannedMenu: document.getElementById("bannedMenuButton"),
+            bannedModal: document.getElementById("bannedModal"), closeModal: document.getElementById("closeModal"),
+            unbanAll: document.getElementById("unbanAllButton"), bannedList: document.getElementById("bannedList"),
+            fav: document.getElementById("favButton"), favMenu: document.getElementById("favMenuButton"),
+            favModal: document.getElementById("favModal"), closeFavModal: document.getElementById("closeFavModal"),
+            unfavAll: document.getElementById("unfavAllButton"), favList: document.getElementById("favList"),
+            unknownBtn: document.getElementById("unknownFilesBtn"), unknownModal: document.getElementById("unknownModal"),
+            closeUnknownModal: document.getElementById("closeUnknownModal"), unknownList: document.getElementById("unknownList"),
+            status: document.getElementById("status"), image: document.getElementById("reference"),
+            filename: document.getElementById("filename"), message: document.getElementById("message"),
+            loading: document.getElementById("loading"), timer: document.getElementById("timer"), toast: document.getElementById("toastOverlay")
+        };
+
         const state = {
             files: [], images: [], unknownFiles: [], pool: [], queue: [],
-            position: 0, idleIndex: 0,
-            running: false, paused: false,
-            duration: 60, secondsRemaining: 60,
-            imageTimer: null, countdownTimer: null,
+            position: 0, idleIndex: 0, running: false, paused: false,
+            duration: 60, secondsRemaining: 60, imageTimer: null, countdownTimer: null,
             seriesId: 0, objectURL: null, currentFile: null,
-            banned: [], zoomLevel: 1, modalThumbURLs: [],
-            toastTimeout: null
+            banned: [], favorites: [], zoomLevel: 1, modalThumbURLs: [], favModalThumbURLs: [],
+            toastTimeout: null, renderTimeout: null
         };
 
         const COOKIE_NAME = "drawingTimerSettingsV2";
         const BANNED_COOKIE_NAME = "drawingTimerBanned";
+        const FAV_COOKIE_NAME = "drawingTimerFavorites";
         const COOKIE_DAYS = 365;
 
+        /* =========================================================
+           HELPERS & SETTINGS
+        ========================================================= */
         function saveSettings() {
             const data = {
-                durationText: DOM.duration.value,
-                andSelect: DOM.andSelect.value,
-                orSelect: DOM.orSelect.value,
-                andExclude: DOM.andExclude.value,
-                orExclude: DOM.orExclude.value
+                durationText: DOM.duration.value, andSelect: DOM.andSelect.value, orSelect: DOM.orSelect.value,
+                andExclude: DOM.andExclude.value, orExclude: DOM.orExclude.value, onlyFavorites: DOM.onlyFavCheckbox.checked
             };
             const expires = new Date(Date.now() + COOKIE_DAYS * 24 * 3600 * 1000).toUTCString();
-            document.cookie = COOKIE_NAME + "=" + encodeURIComponent(JSON.stringify(data)) + "; expires=" + expires + "; path=/; SameSite=Lax";
+            document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(data))}; expires=${expires}; path=/; SameSite=Lax`;
         }
 
         function loadSettings() {
-            const cookies = document.cookie.split(";");
-            let data = null;
-
-            let cookie = cookies.find(c => c.trim().startsWith(COOKIE_NAME + "="));
-            if (cookie) {
-                try { data = JSON.parse(decodeURIComponent(cookie.trim().substring(COOKIE_NAME.length + 1))); } catch (e) {}
-            } else {
-                let oldCookie = cookies.find(c => c.trim().startsWith("drawingTimerSettings="));
-                if (oldCookie) {
-                    try {
-                        let oldData = JSON.parse(decodeURIComponent(oldCookie.trim().substring("drawingTimerSettings".length + 1)));
-                        data = {
-                            durationText: oldData.durationText,
-                            andSelect: oldData.andTags || oldData.tags || "",
-                            orSelect: oldData.orTags || "",
-                            andExclude: "",
-                            orExclude: oldData.notTags || ""
-                        };
-                    } catch (e) {}
-                }
-            }
-
-            if (!data) return;
-
-            if (data.durationText && data.durationText.trim().length > 0) DOM.duration.value = data.durationText;
-            if (data.andSelect !== undefined) DOM.andSelect.value = data.andSelect;
-            if (data.orSelect !== undefined) DOM.orSelect.value = data.orSelect;
-            if (data.andExclude !== undefined) DOM.andExclude.value = data.andExclude;
-            if (data.orExclude !== undefined) DOM.orExclude.value = data.orExclude;
-        }
-
-        function saveBannedImages() {
-            const expires = new Date(Date.now() + COOKIE_DAYS * 24 * 3600 * 1000).toUTCString();
-            document.cookie = BANNED_COOKIE_NAME + "=" + encodeURIComponent(JSON.stringify(state.banned)) + "; expires=" + expires + "; path=/; SameSite=Lax";
-        }
-
-        function loadBannedImages() {
-            const cookies = document.cookie.split(";");
-            const cookie = cookies.find(c => c.trim().startsWith(BANNED_COOKIE_NAME + "="));
+            const cookie = document.cookie.split(";").find(c => c.trim().startsWith(COOKIE_NAME + "="));
             if (!cookie) return;
             try {
-                const data = JSON.parse(decodeURIComponent(cookie.trim().substring(BANNED_COOKIE_NAME.length + 1)));
-                if (Array.isArray(data)) state.banned = data;
-            } catch (error) {}
+                const data = JSON.parse(decodeURIComponent(cookie.trim().substring(COOKIE_NAME.length + 1)));
+                if (data.durationText) DOM.duration.value = data.durationText;
+                if (data.andSelect !== undefined) DOM.andSelect.value = data.andSelect;
+                if (data.orSelect !== undefined) DOM.orSelect.value = data.orSelect;
+                if (data.andExclude !== undefined) DOM.andExclude.value = data.andExclude;
+                if (data.orExclude !== undefined) DOM.orExclude.value = data.orExclude;
+                if (data.onlyFavorites !== undefined) DOM.onlyFavCheckbox.checked = data.onlyFavorites;
+            } catch (e) {}
+        }
+
+        function saveArrayToCookie(name, arr) {
+            const expires = new Date(Date.now() + COOKIE_DAYS * 24 * 3600 * 1000).toUTCString();
+            document.cookie = `${name}=${encodeURIComponent(JSON.stringify(arr))}; expires=${expires}; path=/; SameSite=Lax`;
+        }
+        
+        function loadArrayFromCookie(name) {
+            const cookie = document.cookie.split(";").find(c => c.trim().startsWith(name + "="));
+            if (cookie) {
+                try { const data = JSON.parse(decodeURIComponent(cookie.trim().substring(name.length + 1))); return Array.isArray(data) ? data : []; } catch (e) {}
+            }
+            return [];
         }
 
         function parseTimeToSeconds(inputStr) {
-            if (!inputStr) return 60;
-            const str = String(inputStr).trim();
-            if (!str.includes(":")) {
-                const num = parseFloat(str);
-                return (!isNaN(num) && num > 0) ? num : 60;
-            }
+            const str = String(inputStr || "").trim();
+            if (!str.includes(":")) return parseFloat(str) > 0 ? parseFloat(str) : 60;
             const parts = str.split(":").map(p => parseFloat(p.trim()));
             if (parts.some(isNaN)) return 60;
             if (parts.length === 2) return (parts[0] * 60) + parts[1];
@@ -482,89 +484,77 @@
             return 60;
         }
 
-        function formatSecondsToTimeInput(totalSeconds) {
-            const hrs = Math.floor(totalSeconds / 3600);
-            const mins = Math.floor((totalSeconds % 3600) / 60);
-            const secs = Math.floor(totalSeconds % 60);
-            if (hrs > 0) return `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-            return `${mins}:${String(secs).padStart(2, '0')}`;
+        function formatDuration(seconds) {
+            const t = Math.max(0, Math.ceil(seconds)), h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+            return h > 0 ? `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
         }
 
         function showToast(text) {
-            DOM.toast.textContent = text;
-            DOM.toast.classList.add("show");
-            if (state.toastTimeout !== null) clearTimeout(state.toastTimeout);
-            state.toastTimeout = setTimeout(() => { DOM.toast.classList.remove("show"); }, 1000);
+            DOM.toast.textContent = text; DOM.toast.classList.add("show");
+            if (state.toastTimeout) clearTimeout(state.toastTimeout);
+            state.toastTimeout = setTimeout(() => DOM.toast.classList.remove("show"), 1000);
         }
 
-        function normalizeText(text) {
-            return String(text).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+        /* =========================================================
+           CORE LOGIC
+        ========================================================= */
+        function loadDirectory(fileList, persist = true) {
+            stopSeries(); 
+            DOM.status.textContent = `${fileList.length} files — loading...`;
+            
+            DOM.message.style.display = "none";
+            DOM.image.style.display = "none";
+            DOM.filename.style.display = "none";
+            DOM.loading.style.display = "block";
+
+            setTimeout(async () => {
+                state.files = Array.from(fileList);
+                if (persist && state.files.length > 0) await saveFilesToIDB(state.files);
+                processLoadedFiles();
+            }, 50);
         }
 
-        function getTags(inputEl) {
-            return inputEl.value.split(",").map(normalizeText).filter(tag => tag.length > 0);
-        }
-
-        async function loadDirectory(fileList) {
-            stopSeries();
-            state.files = Array.from(fileList);
+        function processLoadedFiles() {
             state.images = []; state.unknownFiles = []; state.pool = []; state.queue = [];
-            state.position = 0; state.idleIndex = 0;
+            state.position = 0; state.idleIndex = 0; hideImage();
+            DOM.loading.style.display = "none";
 
-            hideImage();
-            showMessage(`Loading ${state.files.length} files... Please wait.`);
-            DOM.status.textContent = `${state.files.length} files — loading...`;
+            if (state.files.length === 0) {
+                DOM.status.textContent = "No directory selected."; showMessage("Select a directory from the bottom left panel.");
+                updateActionButtons(); return;
+            }
 
-            // Séparation des fichiers images et non reconnus
-            state.images = state.files.filter(file => file.type.startsWith("image/"));
-            state.unknownFiles = state.files.filter(file => !file.type.startsWith("image/"));
+            state.images = state.files.filter(f => f.type && f.type.startsWith("image/"));
+            state.unknownFiles = state.files.filter(f => !f.type || !f.type.startsWith("image/"));
 
-            if (DOM.folder.files.length !== state.files.length) return;
+            updatePool(); updateIdleStatus(); updateActionButtons();
 
-            updatePool();
-            updateIdleStatus();
-            updateActionButtons();
-
-            if (state.files.length === 0) { hideImage(); showMessage("No file selected."); return; }
-            if (state.images.length === 0) { hideImage(); showMessage("No readable image has been found."); return; }
-            if (state.pool.length === 0) { hideImage(); showMessage("No images matching those tags."); return; }
-
+            if (state.images.length === 0) { showMessage("No readable image has been found."); return; }
+            if (state.pool.length === 0) { showMessage("No images matching those criteria/tags."); return; }
             showPreview();
         }
 
         function updatePool() {
-            const andSelect = getTags(DOM.andSelect);
-            const orSelect = getTags(DOM.orSelect);
-            const andExclude = getTags(DOM.andExclude);
-            const orExclude = getTags(DOM.orExclude);
-
+            const n = t => String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+            const getTags = el => el.value.split(",").map(n).filter(t => t.length > 0);
+            const andSel = getTags(DOM.andSelect), orSel = getTags(DOM.orSelect), andExc = getTags(DOM.andExclude), orExc = getTags(DOM.orExclude);
+            
             state.pool = state.images.filter(file => {
                 if (state.banned.includes(file.name)) return false;
-
-                const filename = normalizeText(file.name);
-
-                if (andSelect.length > 0 && !andSelect.every(tag => filename.includes(tag))) return false;
-                if (orSelect.length > 0 && !orSelect.some(tag => filename.includes(tag))) return false;
-                if (andExclude.length > 0 && andExclude.every(tag => filename.includes(tag))) return false;
-                if (orExclude.length > 0 && orExclude.some(tag => filename.includes(tag))) return false;
-
+                if (DOM.onlyFavCheckbox.checked && !state.favorites.includes(file.name)) return false;
+                const name = n(file.name);
+                if (andSel.length && !andSel.every(t => name.includes(t))) return false;
+                if (orSel.length && !orSel.some(t => name.includes(t))) return false;
+                if (andExc.length && andExc.every(t => name.includes(t))) return false;
+                if (orExc.length && orExc.some(t => name.includes(t))) return false;
                 return true;
             });
         }
 
         function updateIdleStatus() {
-            if (state.files.length === 0) {
-                DOM.status.textContent = "No directory selected.";
-                DOM.unknownBtn.disabled = true;
-                return;
-            }
+            if (state.files.length === 0) { DOM.status.textContent = "No directory selected."; DOM.unknownBtn.disabled = true; return; }
             DOM.status.textContent = `${state.pool.length} / ${state.images.length} images · ${state.files.length} files`;
             DOM.unknownBtn.disabled = state.unknownFiles.length === 0;
-        }
-
-        function updateRunningStatus() {
-            DOM.status.textContent = `${state.position} / ${state.queue.length}`;
-            DOM.unknownBtn.disabled = true;
         }
 
         function showPreview() {
@@ -573,159 +563,113 @@
             showImage(state.pool[state.idleIndex]);
         }
 
+        function showImage(file) {
+            if (state.renderTimeout) clearTimeout(state.renderTimeout);
+            
+            state.renderTimeout = setTimeout(() => {
+                if (state.objectURL) URL.revokeObjectURL(state.objectURL);
+                state.currentFile = file; state.zoomLevel = 1;
+                DOM.image.style.transformOrigin = "center center"; 
+                DOM.image.style.transform = "scale(1)";
+                state.objectURL = URL.createObjectURL(file);
+                
+                DOM.image.src = state.objectURL; 
+                DOM.image.style.display = "block";
+                DOM.filename.textContent = file.name; 
+                DOM.filename.style.display = "block";
+                DOM.message.style.display = "none";
+                updateActionButtons();
+            }, 60);
+        }
+
+        function hideImage() {
+            if (state.renderTimeout) clearTimeout(state.renderTimeout);
+            state.currentFile = null; state.zoomLevel = 1;
+            DOM.image.style.display = "none"; DOM.image.removeAttribute("src");
+            DOM.filename.style.display = "none"; DOM.filename.textContent = "";
+            if (state.objectURL) { URL.revokeObjectURL(state.objectURL); state.objectURL = null; }
+            updateActionButtons();
+        }
+
+        function showMessage(text) { DOM.message.textContent = text; DOM.message.style.display = "block"; }
+
         function nextImage() {
             if (state.running) {
-                clearImageTimer(); clearCountdownTimer();
-                state.seriesId++;
+                clearTimers(); state.seriesId++;
                 if (state.paused) { state.paused = false; DOM.pause.textContent = "Pause (Space)"; }
                 showNextImage(state.seriesId);
-            } else {
-                if (state.pool.length === 0) return;
-                state.idleIndex = (state.idleIndex + 1) % state.pool.length;
-                showImage(state.pool[state.idleIndex]);
+            } else if (state.pool.length > 0) {
+                state.idleIndex = (state.idleIndex + 1) % state.pool.length; showImage(state.pool[state.idleIndex]);
             }
         }
 
         function prevImage() {
             if (state.running) {
-                let targetPos = state.position - 2;
-                while (targetPos >= 0 && state.banned.includes(state.queue[targetPos].name)) targetPos--;
-                if (targetPos >= 0) {
-                    state.position = targetPos;
-                    clearImageTimer(); clearCountdownTimer();
-                    state.seriesId++;
+                let target = state.position - 2;
+                while (target >= 0 && state.banned.includes(state.queue[target].name)) target--;
+                if (target >= 0) {
+                    state.position = target; clearTimers(); state.seriesId++;
                     if (state.paused) { state.paused = false; DOM.pause.textContent = "Pause (Space)"; }
                     showNextImage(state.seriesId);
                 }
-            } else {
-                if (state.pool.length === 0) return;
-                state.idleIndex = (state.idleIndex - 1 + state.pool.length) % state.pool.length;
-                showImage(state.pool[state.idleIndex]);
+            } else if (state.pool.length > 0) {
+                state.idleIndex = (state.idleIndex - 1 + state.pool.length) % state.pool.length; showImage(state.pool[state.idleIndex]);
             }
         }
 
-        function resetZoom() {
-            state.zoomLevel = 1;
-            DOM.image.style.transformOrigin = "center center";
-            DOM.image.style.transform = "scale(1)";
-        }
-
-        function showImage(file) {
-            releaseObjectURL();
-            state.currentFile = file;
-            resetZoom();
-            const url = URL.createObjectURL(file);
-            state.objectURL = url;
-            DOM.image.src = url;
-            DOM.image.style.display = "block";
-            DOM.filename.textContent = file.name;
-            DOM.filename.style.display = "block";
-            DOM.message.style.display = "none";
-            updateActionButtons();
-        }
-
-        function hideImage() {
-            state.currentFile = null;
-            resetZoom();
-            DOM.image.style.display = "none";
-            DOM.image.removeAttribute("src");
-            DOM.filename.style.display = "none";
-            DOM.filename.textContent = "";
-            releaseObjectURL();
-            updateActionButtons();
-        }
-
-        function showMessage(text) {
-            DOM.message.textContent = text;
-            DOM.message.style.display = "block";
-        }
-
-        function releaseObjectURL() {
-            if (state.objectURL !== null) { URL.revokeObjectURL(state.objectURL); state.objectURL = null; }
-        }
-
-        DOM.image.parentElement.addEventListener("wheel", event => {
+        DOM.image.parentElement.addEventListener("wheel", e => {
             if (DOM.image.style.display === "none") return;
-            event.preventDefault();
+            e.preventDefault();
             const rect = DOM.image.getBoundingClientRect();
-            const originX = ((event.clientX - rect.left) / rect.width) * 100;
-            const originY = ((event.clientY - rect.top) / rect.height) * 100;
-            const delta = event.deltaY < 0 ? 0.15 : -0.15;
-            const newZoom = Math.max(1, Math.min(5, state.zoomLevel + delta));
-            DOM.image.style.transformOrigin = newZoom === 1 ? "center center" : `${originX}% ${originY}%`;
-            state.zoomLevel = newZoom;
+            const x = ((e.clientX - rect.left) / rect.width) * 100, y = ((e.clientY - rect.top) / rect.height) * 100;
+            state.zoomLevel = Math.max(1, Math.min(5, state.zoomLevel + (e.deltaY < 0 ? 0.15 : -0.15)));
+            DOM.image.style.transformOrigin = state.zoomLevel === 1 ? "center center" : `${x}% ${y}%`;
             DOM.image.style.transform = `scale(${state.zoomLevel})`;
         }, { passive: false });
 
-        function shuffle(array) {
-            const result = [...array];
-            for (let i = result.length - 1; i > 0; i--) {
-                const r = Math.floor(Math.random() * (i + 1));
-                [result[i], result[r]] = [result[r], result[i]];
-            }
-            return result;
-        }
-
-        function formatDuration(seconds) {
-            const t = Math.max(0, Math.ceil(seconds));
-            const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
-            if (h > 0) return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-            return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-        }
-
+        /* =========================================================
+           SLIDESHOW TIMERS
+        ========================================================= */
         function startSeries() {
             updatePool();
-            if (state.images.length === 0) { alert("Select a directory first."); return; }
-            if (state.pool.length === 0) { alert("No matching image."); updateIdleStatus(); return; }
-            const duration = parseTimeToSeconds(DOM.duration.value);
-            if (!duration || duration <= 0) { alert("Time must be greater than 0."); return; }
+            if (!state.images.length) return alert("Select a directory first.");
+            if (!state.pool.length) { alert("No matching image."); return updateIdleStatus(); }
+            const dur = parseTimeToSeconds(DOM.duration.value);
+            if (dur <= 0) return alert("Time must be greater than 0.");
 
-            state.duration = duration; saveSettings();
-            state.queue = shuffle(state.pool);
-            state.position = 0; state.seriesId++;
-            state.running = true; state.paused = false;
-
-            DOM.go.textContent = "Stop (K)";
-            DOM.pause.textContent = "Pause (Space)";
-            updateActionButtons();
-            showNextImage(state.seriesId);
-            showToast("Playing");
+            state.duration = dur; saveSettings();
+            state.queue = [...state.pool].sort(() => Math.random() - 0.5);
+            state.position = 0; state.seriesId++; state.running = true; state.paused = false;
+            
+            DOM.go.textContent = "Stop (K)"; DOM.pause.textContent = "Pause (Space)";
+            updateActionButtons(); showNextImage(state.seriesId); showToast("Playing");
         }
 
         function showNextImage(seriesId) {
             if (seriesId !== state.seriesId || !state.running) return;
             while (state.position < state.queue.length && state.banned.includes(state.queue[state.position].name)) state.position++;
-            if (state.position >= state.queue.length) { finishSeries(); return; }
+            if (state.position >= state.queue.length) return finishSeries();
 
-            showImage(state.queue[state.position]);
-            state.position++;
-            startCountdown(seriesId);
-            updateRunningStatus();
+            showImage(state.queue[state.position]); state.position++;
+            
+            state.secondsRemaining = state.duration; runCountdown(seriesId);
+            DOM.status.textContent = `${state.position} / ${state.queue.length}`; DOM.unknownBtn.disabled = true;
             scheduleNextImage(seriesId);
         }
 
-        function scheduleNextImage(seriesId, delaySeconds) {
-            clearImageTimer();
-            const delay = (delaySeconds !== undefined ? delaySeconds : state.duration) * 1000;
+        function scheduleNextImage(seriesId, delaySec = state.duration) {
+            if (state.imageTimer) clearTimeout(state.imageTimer);
             state.imageTimer = setTimeout(() => {
-                if (seriesId !== state.seriesId || !state.running || state.paused) return;
-                showNextImage(seriesId);
-            }, delay);
-        }
-
-        function startCountdown(seriesId) {
-            state.secondsRemaining = state.duration;
-            runCountdown(seriesId);
+                if (seriesId === state.seriesId && state.running && !state.paused) showNextImage(seriesId);
+            }, delaySec * 1000);
         }
 
         function runCountdown(seriesId) {
-            clearCountdownTimer();
-            updateTimerDisplay();
-            DOM.timer.style.display = "block";
+            if (state.countdownTimer) clearInterval(state.countdownTimer);
+            updateTimerDisplay(); DOM.timer.style.display = "block";
             state.countdownTimer = setInterval(() => {
                 if (seriesId !== state.seriesId || !state.running || state.paused) return;
-                state.secondsRemaining--;
-                if (state.secondsRemaining < 0) state.secondsRemaining = 0;
+                state.secondsRemaining = Math.max(0, state.secondsRemaining - 1);
                 updateTimerDisplay();
             }, 1000);
         }
@@ -740,179 +684,171 @@
             if (!state.running) return;
             state.paused = !state.paused;
             if (state.paused) {
-                clearImageTimer(); clearCountdownTimer();
-                DOM.pause.textContent = "Play (Space)";
-                showToast("Paused");
+                clearTimers(); DOM.pause.textContent = "Play (Space)"; showToast("Paused");
             } else {
-                DOM.pause.textContent = "Pause (Space)";
-                runCountdown(state.seriesId);
-                scheduleNextImage(state.seriesId, state.secondsRemaining);
-                showToast("Playing");
-            }
-        }
-
-        function banCurrentImage() {
-            if (!state.currentFile) return;
-            const fileName = state.currentFile.name;
-            if (!state.banned.includes(fileName)) {
-                state.banned.push(fileName);
-                saveBannedImages();
-                updatePool();
-            }
-            if (state.running) nextImage();
-            else {
-                updateIdleStatus();
-                if (state.pool.length > 0) nextImage();
-                else { hideImage(); showMessage("No images matching those tags."); }
-            }
-        }
-
-        function unbanImage(fileName) {
-            state.banned = state.banned.filter(name => name !== fileName);
-            saveBannedImages(); renderBannedList(); updatePool(); updateIdleStatus();
-        }
-
-        function unbanAllImages() {
-            if (state.banned.length === 0) return;
-            state.banned = [];
-            saveBannedImages(); renderBannedList(); updatePool(); updateIdleStatus();
-        }
-
-        function clearModalThumbURLs() {
-            state.modalThumbURLs.forEach(url => URL.revokeObjectURL(url));
-            state.modalThumbURLs = [];
-        }
-
-        function renderBannedList() {
-            clearModalThumbURLs();
-            DOM.bannedList.innerHTML = "";
-            if (state.banned.length === 0) {
-                DOM.bannedList.innerHTML = '<div style="color:#777; text-align:center; padding:20px;">No banned images</div>';
-                return;
-            }
-            state.banned.forEach(fileName => {
-                const item = document.createElement("div");
-                item.className = "banned-item";
-                const matchedFile = state.images.find(f => f.name === fileName);
-                let thumbHTML = "";
-                if (matchedFile) {
-                    const url = URL.createObjectURL(matchedFile);
-                    state.modalThumbURLs.push(url);
-                    thumbHTML = `<img src="${url}" class="banned-thumb" alt="">`;
-                } else {
-                    thumbHTML = `<div class="banned-thumb-placeholder">N/A</div>`;
-                }
-                item.innerHTML = `${thumbHTML}<span class="banned-item-name" title="${fileName}">${fileName}</span><span class="banned-item-action">Click to Unban</span>`;
-                item.addEventListener("click", () => unbanImage(fileName));
-                DOM.bannedList.appendChild(item);
-            });
-        }
-
-        function renderUnknownList() {
-            DOM.unknownList.innerHTML = "";
-            if (state.unknownFiles.length === 0) {
-                DOM.unknownList.innerHTML = '<div style="color:#777; text-align:center; padding:20px;">No unknown files</div>';
-                return;
-            }
-            state.unknownFiles.forEach(file => {
-                const item = document.createElement("div");
-                item.className = "unknown-item";
-                item.innerHTML = `<span class="unknown-item-name" title="${file.name} (Type: ${file.type || 'unknown'})">${file.name}</span>`;
-                DOM.unknownList.appendChild(item);
-            });
-        }
-
-        function toggleBannedModal() {
-            if (DOM.bannedModal.classList.contains("open")) {
-                DOM.bannedModal.classList.remove("open"); clearModalThumbURLs();
-            } else {
-                renderBannedList(); DOM.bannedModal.classList.add("open");
-            }
-        }
-
-        function toggleUnknownModal() {
-            if (DOM.unknownModal.classList.contains("open")) {
-                DOM.unknownModal.classList.remove("open");
-            } else {
-                renderUnknownList(); DOM.unknownModal.classList.add("open");
+                DOM.pause.textContent = "Pause (Space)"; runCountdown(state.seriesId);
+                scheduleNextImage(state.seriesId, state.secondsRemaining); showToast("Playing");
             }
         }
 
         function stopSeries() {
-            state.seriesId++; state.running = false; state.paused = false;
-            clearImageTimer(); clearCountdownTimer();
+            state.seriesId++; state.running = false; state.paused = false; clearTimers();
             DOM.go.textContent = "Go (Space)"; DOM.pause.textContent = "Pause (Space)";
             DOM.timer.style.display = "none"; DOM.timer.classList.remove("warning");
             updateActionButtons(); showToast("Stopped");
         }
 
         function finishSeries() {
-            clearImageTimer(); clearCountdownTimer();
-            state.running = false; state.paused = false;
-            DOM.go.textContent = "Go (Space)"; DOM.pause.textContent = "Pause (Space)";
-            DOM.timer.style.display = "none"; DOM.timer.classList.remove("warning");
+            stopSeries(); DOM.status.textContent = `${state.queue.length} / ${state.queue.length} — Done.`; showToast("Finished");
+        }
+
+        function clearTimers() {
+            if (state.imageTimer) clearTimeout(state.imageTimer);
+            if (state.countdownTimer) clearInterval(state.countdownTimer);
+        }
+
+        /* =========================================================
+           FAVORITES & BANS
+        ========================================================= */
+        function banCurrentImage() {
+            if (!state.currentFile) return;
+            const fileName = state.currentFile.name;
+
+            if (!state.banned.includes(fileName)) {
+                state.banned.push(fileName); saveArrayToCookie(BANNED_COOKIE_NAME, state.banned);
+            }
+
+            const favIndex = state.favorites.indexOf(fileName);
+            if (favIndex !== -1) {
+                state.favorites.splice(favIndex, 1);
+                saveArrayToCookie(FAV_COOKIE_NAME, state.favorites);
+            }
+
             updateActionButtons();
-            DOM.status.textContent = `${state.queue.length} / ${state.queue.length} — Done.`;
-            showToast("Finished");
+            updatePool();
+            state.running ? nextImage() : (updateIdleStatus(), state.pool.length ? nextImage() : (hideImage(), showMessage("No matching images.")));
         }
 
-        function clearImageTimer() { if (state.imageTimer !== null) { clearTimeout(state.imageTimer); state.imageTimer = null; } }
-        function clearCountdownTimer() { if (state.countdownTimer !== null) { clearInterval(state.countdownTimer); state.countdownTimer = null; } }
+        function toggleFavoriteCurrent() {
+            if (!state.currentFile) return;
+            const idx = state.favorites.indexOf(state.currentFile.name);
+            if (idx === -1) { state.favorites.push(state.currentFile.name); showToast("Added to favourites"); }
+            else { state.favorites.splice(idx, 1); showToast("Removed from favourites"); }
+            saveArrayToCookie(FAV_COOKIE_NAME, state.favorites); updateActionButtons(); updatePool();
+            if (!state.running) updateIdleStatus();
+        }
 
+        function renderList(type, listArr, container, modalId) {
+            const isBanned = type === 'banned';
+            const thumbArray = isBanned ? state.modalThumbURLs : state.favModalThumbURLs;
+            thumbArray.forEach(URL.revokeObjectURL);
+            if (isBanned) state.modalThumbURLs = []; else state.favModalThumbURLs = [];
+            
+            container.innerHTML = "";
+            if (!listArr.length) { 
+                container.innerHTML = `<div style="color:#777; text-align:center; padding:20px;">No ${isBanned ? 'banned' : 'favorite'} images</div>`; 
+                return; 
+            }
+            
+            listArr.forEach(fileName => {
+                const item = document.createElement("div"), file = state.images.find(f => f.name === fileName);
+                item.className = isBanned ? "banned-item" : "fav-item";
+                let thumbHTML = `<div class="${isBanned ? 'banned' : 'fav'}-thumb-placeholder">N/A</div>`;
+                
+                if (file) {
+                    const url = URL.createObjectURL(file);
+                    (isBanned ? state.modalThumbURLs : state.favModalThumbURLs).push(url);
+                    thumbHTML = `<img src="${url}" class="${isBanned ? 'banned' : 'fav'}-thumb" title="Click to view">`;
+                }
+                
+                item.innerHTML = `${thumbHTML}<span class="${isBanned ? 'banned' : 'fav'}-item-name" title="${fileName}">${fileName}</span><button class="remove-btn">Remove</button>`;
+                if (file) item.querySelector(`.${isBanned ? 'banned' : 'fav'}-thumb`).onclick = () => { showImage(file); document.getElementById(modalId).classList.remove("open"); };
+                item.querySelector('.remove-btn').onclick = () => {
+                    if (isBanned) { 
+                        state.banned = state.banned.filter(n => n !== fileName); 
+                        saveArrayToCookie(BANNED_COOKIE_NAME, state.banned); 
+                    } else { 
+                        state.favorites = state.favorites.filter(n => n !== fileName); 
+                        saveArrayToCookie(FAV_COOKIE_NAME, state.favorites); 
+                    }
+                    updateActionButtons(); updatePool(); updateIdleStatus(); renderList(type, listArr, container, modalId);
+                };
+                container.appendChild(item);
+            });
+        }
+
+        function toggleModal(modal, renderer) {
+            modal.classList.contains("open") ? modal.classList.remove("open") : (renderer(), modal.classList.add("open"));
+        }
+
+        /* =========================================================
+           LISTENERS & INIT
+        ========================================================= */
         function updateActionButtons() {
-            const hasCurrent = Boolean(state.currentFile);
-            const hasImages = state.pool.length > 0 || state.running;
-            DOM.pause.disabled = !state.running;
-            DOM.next.disabled = !hasImages;
-            DOM.prev.disabled = !hasImages;
-            DOM.ban.disabled = !hasCurrent;
+            const hasC = !!state.currentFile, hasImg = state.pool.length > 0 || state.running;
+            DOM.pause.disabled = !state.running; DOM.next.disabled = !hasImg; DOM.prev.disabled = !hasImg;
+            DOM.ban.disabled = !hasC; DOM.fav.disabled = !hasC;
+            DOM.fav.textContent = (hasC && state.favorites.includes(state.currentFile.name)) ? "Unfavorite (F)" : "Favorite (F)";
         }
 
-        function handleTagsChange() {
-            saveSettings();
-            if (state.running) return;
+        const handleTags = () => {
+            saveSettings(); if (state.running) return;
             updatePool(); updateIdleStatus();
-            if (state.images.length > 0 && state.pool.length === 0) { hideImage(); showMessage("No image matching with these tags."); return; }
-            if (state.pool.length > 0) showPreview();
-        }
+            if (state.images.length > 0 && !state.pool.length) { hideImage(); showMessage("No matching images."); }
+            else if (state.pool.length > 0) showPreview();
+        };
 
-        DOM.andSelect.addEventListener("input", handleTagsChange);
-        DOM.orSelect.addEventListener("input", handleTagsChange);
-        DOM.andExclude.addEventListener("input", handleTagsChange);
-        DOM.orExclude.addEventListener("input", handleTagsChange);
-
+        ['andSelect', 'orSelect', 'andExclude', 'orExclude'].forEach(id => DOM[id].addEventListener("input", handleTags));
+        DOM.onlyFavCheckbox.addEventListener("change", handleTags);
         DOM.duration.addEventListener("change", () => { state.duration = parseTimeToSeconds(DOM.duration.value); saveSettings(); });
-        DOM.folder.addEventListener("change", async () => { await loadDirectory(DOM.folder.files); });
+        DOM.folder.addEventListener("change", () => loadDirectory(DOM.folder.files, true));
 
-        DOM.go.addEventListener("click", () => { if (state.running) { stopSeries(); updateIdleStatus(); return; } startSeries(); });
+        DOM.go.addEventListener("click", () => state.running ? (stopSeries(), updateIdleStatus()) : startSeries());
         DOM.pause.addEventListener("click", togglePause);
-        DOM.next.addEventListener("click", nextImage);
-        DOM.prev.addEventListener("click", prevImage);
-        DOM.ban.addEventListener("click", banCurrentImage);
-        DOM.bannedMenu.addEventListener("click", toggleBannedModal);
+        DOM.next.addEventListener("click", nextImage); DOM.prev.addEventListener("click", prevImage);
+        DOM.ban.addEventListener("click", banCurrentImage); DOM.fav.addEventListener("click", toggleFavoriteCurrent);
         
-        DOM.unknownBtn.addEventListener("click", toggleUnknownModal);
-        DOM.closeUnknownModal.addEventListener("click", toggleUnknownModal);
+        DOM.bannedMenu.addEventListener("click", () => toggleModal(DOM.bannedModal, () => renderList('banned', state.banned, DOM.bannedList, 'bannedModal')));
+        DOM.favMenu.addEventListener("click", () => toggleModal(DOM.favModal, () => renderList('fav', state.favorites, DOM.favList, 'favModal')));
+        DOM.unknownBtn.addEventListener("click", () => toggleModal(DOM.unknownModal, () => {
+            DOM.unknownList.innerHTML = state.unknownFiles.length ? state.unknownFiles.map(f => `<div class="unknown-item"><span class="unknown-item-name" title="${f.name}">${f.name}</span></div>`).join('') : '<div style="color:#777; text-align:center; padding:20px;">No unknown files</div>';
+        }));
 
-        DOM.unbanAll.addEventListener("click", unbanAllImages);
-        DOM.closeModal.addEventListener("click", toggleBannedModal);
-        DOM.bannedModal.addEventListener("click", event => { if (event.target === DOM.bannedModal) toggleBannedModal(); });
-        DOM.unknownModal.addEventListener("click", event => { if (event.target === DOM.unknownModal) toggleUnknownModal(); });
+        [DOM.closeModal, DOM.closeFavModal, DOM.closeUnknownModal].forEach(btn => btn.addEventListener("click", e => e.target.closest('.modal').classList.remove("open")));
+        [DOM.bannedModal, DOM.favModal, DOM.unknownModal].forEach(m => m.addEventListener("click", e => { if (e.target === m) m.classList.remove("open"); }));
 
-        document.addEventListener("keydown", event => {
-            const active = document.activeElement;
-            if (active && (active.tagName === "INPUT" || active.tagName === "SELECT" || active.tagName === "TEXTAREA")) return;
+        DOM.unbanAll.addEventListener("click", () => { state.banned = []; saveArrayToCookie(BANNED_COOKIE_NAME, []); updatePool(); updateIdleStatus(); renderList('banned', state.banned, DOM.bannedList, 'bannedModal'); });
+        DOM.unfavAll.addEventListener("click", () => { state.favorites = []; saveArrayToCookie(FAV_COOKIE_NAME, []); updateActionButtons(); updatePool(); updateIdleStatus(); renderList('fav', state.favorites, DOM.favList, 'favModal'); });
 
-            const key = event.key.toLowerCase();
-            if (event.code === "Space" || event.key === " ") { event.preventDefault(); if (!state.running) startSeries(); else togglePause(); return; }
-            if (key === "k") { event.preventDefault(); if (state.running) { stopSeries(); updateIdleStatus(); } return; }
-            if (key === "q" || event.code === "ArrowLeft") { event.preventDefault(); prevImage(); return; }
-            if (key === "d" || event.code === "ArrowRight") { event.preventDefault(); nextImage(); return; }
-            if (key === "x") { event.preventDefault(); banCurrentImage(); return; }
-            if (key === "l") { event.preventDefault(); toggleBannedModal(); return; }
+        document.addEventListener("keydown", e => {
+            const tag = document.activeElement?.tagName;
+            if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+            const k = e.key.toLowerCase();
+            if (k === " " || e.code === "Space") { e.preventDefault(); state.running ? togglePause() : startSeries(); }
+            else if (k === "k") { e.preventDefault(); if (state.running) { stopSeries(); updateIdleStatus(); } }
+            else if (k === "q" || e.code === "ArrowLeft") { e.preventDefault(); prevImage(); }
+            else if (k === "d" || e.code === "ArrowRight") { e.preventDefault(); nextImage(); }
+            else if (k === "x") { e.preventDefault(); banCurrentImage(); }
+            else if (k === "f") { e.preventDefault(); toggleFavoriteCurrent(); }
+            else if (k === "l") { e.preventDefault(); toggleModal(DOM.bannedModal, () => renderList('banned', state.banned, DOM.bannedList, 'bannedModal')); }
+            else if (k === "m") { e.preventDefault(); toggleModal(DOM.favModal, () => renderList('fav', state.favorites, DOM.favList, 'favModal')); }
         });
 
-        loadSettings(); loadBannedImages(); updateActionButtons();
+        // INIT
+        loadSettings(); state.banned = loadArrayFromCookie(BANNED_COOKIE_NAME); state.favorites = loadArrayFromCookie(FAV_COOKIE_NAME);
+        updateActionButtons();
+        (async () => {
+            const cached = await loadFilesFromIDB();
+            if (cached && cached.length) { 
+                DOM.message.style.display = "none";
+                DOM.loading.style.display = "block";
+                setTimeout(() => {
+                    state.files = cached; 
+                    processLoadedFiles(); 
+                    showToast("Loaded cached files"); 
+                }, 50);
+            }
+        })();
     </script>
 </body>
 </html>
