@@ -156,9 +156,21 @@
         #sidebar input[type="file"]::file-selector-button:hover { background: #35383e; border-color: #555961; }
 
         /* =========================================================
-           STATUS
+           STATUS & UNKNOWN FILES BUTTON CONTAINER
         ========================================================= */
-        #status { margin-left: auto; color: #85888f; font-size: 13px; white-space: nowrap; text-align: right; }
+        #status-container {
+            margin-left: auto; display: flex; align-items: center; gap: 8px;
+        }
+        #status { color: #85888f; font-size: 13px; white-space: nowrap; text-align: right; }
+        
+        #unknownFilesBtn {
+            background: #2b2e34; border: 1px solid #3b3e44; color: #85888f; border-radius: 50%;
+            width: 24px; height: 24px; font-size: 12px; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; padding: 0;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+        #unknownFilesBtn:hover:not(:disabled) { background: #383c44; color: #ffffff; border-color: #525660; }
+        #unknownFilesBtn:disabled { opacity: 0.35; cursor: not-allowed; }
 
         /* =========================================================
            MAIN & IMAGE
@@ -202,7 +214,7 @@
         }
 
         /* =========================================================
-           MODAL BANNED IMAGES
+           MODALS (BANNED & UNKNOWN FILES)
         ========================================================= */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -217,13 +229,15 @@
         #unbanAllButton:hover { background: #383c44; color: #ffffff; }
         .modal-close { background: transparent; border: none; color: #85888f; font-size: 22px; cursor: pointer; padding: 0 4px; height: auto; }
         .modal-close:hover { color: #ffffff; }
-        #bannedList { padding: 15px 20px; overflow-y: auto; max-height: 60vh; display: flex; flex-direction: column; gap: 8px; }
+        
+        #bannedList, #unknownList { padding: 15px 20px; overflow-y: auto; max-height: 60vh; display: flex; flex-direction: column; gap: 8px; }
 
-        .banned-item { display: flex; align-items: center; gap: 12px; background: #23262b; padding: 8px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; color: #d1d5db; }
+        .banned-item, .unknown-item { display: flex; align-items: center; gap: 12px; background: #23262b; padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #d1d5db; }
+        .banned-item { cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
         .banned-item:hover { background: #35383e; color: #ffffff; }
         .banned-thumb { width: 42px; height: 42px; object-fit: cover; border-radius: 4px; background: #101113; flex-shrink: 0; }
         .banned-thumb-placeholder { width: 42px; height: 42px; border-radius: 4px; background: #101113; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #555; flex-shrink: 0; }
-        .banned-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .banned-item-name, .unknown-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .banned-item-action { font-size: 12px; color: #999ca3; font-weight: 600; white-space: nowrap; transition: color 0.15s ease; }
         .banned-item:hover .banned-item-action { color: #f2efe9; }
 
@@ -233,7 +247,7 @@
         @media (max-width: 1550px) {
             header { gap: 10px; padding: 8px; }
             .input-container { width: 125px; }
-            #status { display: none; }
+            #status-container { display: none; }
         }
     </style>
 </head>
@@ -283,11 +297,14 @@
 
         <button id="goButton">Go (Space)</button>
         <button id="pauseButton" disabled>Pause (Space)</button>
-        <span id="status">No directory selected.</span>
+        <div id="status-container">
+            <span id="status">No directory selected.</span>
+            <button id="unknownFilesBtn" title="View files not recognized as images" disabled>?</button>
+        </div>
     </header>
 
     <!-- =========================================================
-         SIDEBAR CONTROLS (Includes File input now)
+         SIDEBAR CONTROLS
     ========================================================== -->
     <div id="sidebar">
         <input id="folderInput" type="file" webkitdirectory directory multiple title="Browse directory">
@@ -324,6 +341,19 @@
         </div>
     </div>
 
+    <!-- =========================================================
+         MODAL UNKNOWN FILES
+    ========================================================== -->
+    <div id="unknownModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Files not recognized as images</h3>
+                <button id="closeUnknownModal" class="modal-close">&times;</button>
+            </div>
+            <div id="unknownList"></div>
+        </div>
+    </div>
+
     <script>
         /* =========================================================
            DOM
@@ -347,6 +377,12 @@
             closeModal: document.getElementById("closeModal"),
             unbanAll: document.getElementById("unbanAllButton"),
             bannedList: document.getElementById("bannedList"),
+            
+            unknownBtn: document.getElementById("unknownFilesBtn"),
+            unknownModal: document.getElementById("unknownModal"),
+            closeUnknownModal: document.getElementById("closeUnknownModal"),
+            unknownList: document.getElementById("unknownList"),
+
             status: document.getElementById("status"),
             image: document.getElementById("reference"),
             filename: document.getElementById("filename"),
@@ -359,7 +395,7 @@
            APPLICATION STATE
         ========================================================= */
         const state = {
-            files: [], images: [], pool: [], queue: [],
+            files: [], images: [], unknownFiles: [], pool: [], queue: [],
             position: 0, idleIndex: 0,
             running: false, paused: false,
             duration: 60, secondsRemaining: 60,
@@ -469,33 +505,21 @@
             return inputEl.value.split(",").map(normalizeText).filter(tag => tag.length > 0);
         }
 
-        async function canDecodeAsImage(file) {
-            const url = URL.createObjectURL(file);
-            try {
-                const testImage = new Image();
-                testImage.src = url;
-                await testImage.decode();
-                return true;
-            } catch { return false; } finally { URL.revokeObjectURL(url); }
-        }
-
         async function loadDirectory(fileList) {
             stopSeries();
             state.files = Array.from(fileList);
-            state.images = []; state.pool = []; state.queue = [];
+            state.images = []; state.unknownFiles = []; state.pool = []; state.queue = [];
             state.position = 0; state.idleIndex = 0;
 
             hideImage();
             showMessage(`Loading ${state.files.length} files... Please wait.`);
             DOM.status.textContent = `${state.files.length} files — loading...`;
 
-            const results = await Promise.all(state.files.map(async file => {
-                return { file, valid: await canDecodeAsImage(file) };
-            }));
+            // Séparation des fichiers images et non reconnus
+            state.images = state.files.filter(file => file.type.startsWith("image/"));
+            state.unknownFiles = state.files.filter(file => !file.type.startsWith("image/"));
 
             if (DOM.folder.files.length !== state.files.length) return;
-
-            state.images = results.filter(r => r.valid).map(r => r.file);
 
             updatePool();
             updateIdleStatus();
@@ -529,12 +553,18 @@
         }
 
         function updateIdleStatus() {
-            if (state.files.length === 0) { DOM.status.textContent = "No directory selected."; return; }
+            if (state.files.length === 0) {
+                DOM.status.textContent = "No directory selected.";
+                DOM.unknownBtn.disabled = true;
+                return;
+            }
             DOM.status.textContent = `${state.pool.length} / ${state.images.length} images · ${state.files.length} files`;
+            DOM.unknownBtn.disabled = state.unknownFiles.length === 0;
         }
 
         function updateRunningStatus() {
             DOM.status.textContent = `${state.position} / ${state.queue.length}`;
+            DOM.unknownBtn.disabled = true;
         }
 
         function showPreview() {
@@ -778,11 +808,33 @@
             });
         }
 
+        function renderUnknownList() {
+            DOM.unknownList.innerHTML = "";
+            if (state.unknownFiles.length === 0) {
+                DOM.unknownList.innerHTML = '<div style="color:#777; text-align:center; padding:20px;">No unknown files</div>';
+                return;
+            }
+            state.unknownFiles.forEach(file => {
+                const item = document.createElement("div");
+                item.className = "unknown-item";
+                item.innerHTML = `<span class="unknown-item-name" title="${file.name} (Type: ${file.type || 'unknown'})">${file.name}</span>`;
+                DOM.unknownList.appendChild(item);
+            });
+        }
+
         function toggleBannedModal() {
             if (DOM.bannedModal.classList.contains("open")) {
                 DOM.bannedModal.classList.remove("open"); clearModalThumbURLs();
             } else {
                 renderBannedList(); DOM.bannedModal.classList.add("open");
+            }
+        }
+
+        function toggleUnknownModal() {
+            if (DOM.unknownModal.classList.contains("open")) {
+                DOM.unknownModal.classList.remove("open");
+            } else {
+                renderUnknownList(); DOM.unknownModal.classList.add("open");
             }
         }
 
@@ -838,9 +890,14 @@
         DOM.prev.addEventListener("click", prevImage);
         DOM.ban.addEventListener("click", banCurrentImage);
         DOM.bannedMenu.addEventListener("click", toggleBannedModal);
+        
+        DOM.unknownBtn.addEventListener("click", toggleUnknownModal);
+        DOM.closeUnknownModal.addEventListener("click", toggleUnknownModal);
+
         DOM.unbanAll.addEventListener("click", unbanAllImages);
         DOM.closeModal.addEventListener("click", toggleBannedModal);
         DOM.bannedModal.addEventListener("click", event => { if (event.target === DOM.bannedModal) toggleBannedModal(); });
+        DOM.unknownModal.addEventListener("click", event => { if (event.target === DOM.unknownModal) toggleUnknownModal(); });
 
         document.addEventListener("keydown", event => {
             const active = document.activeElement;
