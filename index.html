@@ -7,13 +7,32 @@
     <title>Drawing Timer</title>
     <style>
         /* =========================================================
+           VARIABLES & CHARTE GRAPHIQUE
+        ========================================================= */
+        :root {
+            --bg-main: #111214;
+            --bg-header: #1b1d20;
+            --bg-panel: #2b2e34;
+            --bg-panel-hover: #383c44;
+            --bg-dark: #101113;
+            --text-main: #ffffff;
+            --text-muted: #85888f;
+            --text-dim: #60636a;
+            --border-main: #303238;
+            --border-light: #3b3e44;
+            --accent-beige: #f2efe9;
+            --accent-beige-hover: #e2dfd9;
+            --accent-blue: #4f8cff;
+        }
+
+        /* =========================================================
            RESET & GLOBAL
         ========================================================= */
         * { box-sizing: border-box; }
         html, body { width: 100%; height: 100%; margin: 0; }
         body {
             display: flex; flex-direction: column; overflow: hidden;
-            background: #111214; color: #f1f1f1;
+            background: var(--bg-main); color: #f1f1f1;
             font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
@@ -22,77 +41,72 @@
         ========================================================= */
         header {
             display: flex; align-items: center; gap: 16px; min-height: 56px; padding: 8px 14px;
-            background: #1b1d20; border-bottom: 1px solid #303238;
+            background: var(--bg-header); border-bottom: 1px solid var(--border-main);
             box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3); z-index: 10;
             flex-wrap: wrap; justify-content: center;
         }
 
-        .filter-zones { display: flex; gap: 12px; align-items: center; }
-        .zone { display: flex; align-items: center; gap: 0px; padding: 4px 6px; border-radius: 10px; height: 48px; border: none; }
+        .filter-zones { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: center; }
+        .zone { display: flex; align-items: center; gap: 0px; padding: 4px 6px; padding-right: 0px; border-radius: 10px; height: 36px; border: none; }
         .zone-group { display: flex; align-items: center; gap: 6px; }
         .zone-label { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; width: 30px; text-align: right; }
 
-        .zone-light { background: #f2efe9; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
-        .zone-light .input-container { background: #ffffff; border: 1px solid #d8d4cc; }
-        .zone-light input { color: #111214; }
+        .zone-light { background: var(--accent-beige); box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+        .zone-light .input-container { background: var(--text-main); border: 1px solid #d8d4cc; }
+        .zone-light input { color: var(--bg-main); }
         .zone-light input::placeholder { color: #9a9b9e; }
         .zone-light .zone-label { color: #55534e; }
 
-        .zone-dark { background: #111214; box-shadow: inset 0 1px 3px rgba(0,0,0,0.4); }
-        .zone-dark .input-container { background: #1a1c20; border: 1px solid #3b3e44; }
-        .zone-dark input { color: #ffffff; }
-        .zone-dark input::placeholder { color: #60636a; }
+        .zone-dark { background: var(--bg-main); box-shadow: inset 0 1px 3px rgba(0,0,0,0.4); }
+        .zone-dark .input-container { background: #1a1c20; border: 1px solid #292929; }
+        .zone-dark input { color: var(--text-main); }
+        .zone-dark input::placeholder { color: var(--text-dim); }
         .zone-dark .zone-label { color: #9699a0; }
 
-        .zone-duration {
-            background: #1a1c20; box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
-            border: 1px solid #303238; align-items: center; height: 48px; padding: 6px;
+        .input-container {
+            position: relative; width: 200px; height: 36px; border-radius: 0px ; overflow: hidden;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease; outline: none;
         }
 
-        .input-container {
-            position: relative; width: 200px; height: 36px; border-radius: 7px; overflow: hidden;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-        .input-container:focus-within {
-            border-color: #4f8cff !important;
-            box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12) !important;
-        }
+        .round-right {border-top-right-radius: 10px; border-bottom-right-radius: 10px;}
+
         .input-container input {
             position: relative; z-index: 2; width: 100%; height: 100%; padding: 0 12px;
             border: none; background: transparent; outline: none; font-size: 14px; font-family: inherit;
         }
 
         #durationInput {
-            height: 36px; border: 1px solid #3b3e44; border-radius: 7px;
-            background: #101113; color: #ffffff; outline: none; font-family: inherit;
+            height: 36px; border: none; border-radius: 10px;
+            background: var(--bg-dark); color: var(--text-main); outline: none; font-family: inherit;
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
             width: 75px; padding: 0 10px; text-align: center; font-size: 14px; font-variant-numeric: tabular-nums;
         }
-        #durationInput:focus { border-color: #4f8cff; box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12); }
-        #durationInput::placeholder { color: #60636a; }
+
+        #durationInput:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12); }
+        #durationInput::placeholder { color: var(--text-dim); }
 
         header button {
-            height: 48px; padding: 0 20px; border: 1px solid #3b3e44; border-radius: 10px;
-            background: #2b2e34; color: #e1e3e8; font-family: inherit; font-size: 14px; font-weight: 600;
+            height: 36px; padding: 0 20px; border: 1px solid var(--border-light); border-radius: 10px;
+            background: var(--bg-panel); color: var(--accent-beige); font-family: inherit; font-size: 14px; font-weight: 600;
             cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.08s ease;
         }
-        header button:hover:not(:disabled) { background: #383c44; border-color: #525660; color: #ffffff; }
+        header button:hover:not(:disabled) { background: var(--bg-panel-hover); border-color: #525660; color: var(--text-main);}
         header button:active { transform: translateY(1px); }
-        header button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+        header button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; display: none;}
 
-        #goButton { background: #f2efe9; color: #111214; border-color: #f2efe9; }
-        #goButton:hover:not(:disabled) { background: #e2dfd9; border-color: #e2dfd9; color: #111214; }
+        #goButton { background: var(--accent-beige); color: var(--bg-main); border-color: var(--accent-beige); }
+        #goButton:hover:not(:disabled) { background: var(--accent-beige-hover); border-color: var(--accent-beige-hover); color: var(--bg-main); }
 
         #status-container { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-        #status { color: #85888f; font-size: 13px; white-space: nowrap; text-align: right; }
+        #status { color: var(--text-muted); font-size: 13px; white-space: nowrap; text-align: right; }
         
         #unknownFilesBtn {
-            background: #2b2e34; border: 1px solid #3b3e44; color: #85888f; border-radius: 50%;
+            background: var(--bg-panel); border: 1px solid var(--border-light); color: var(--text-muted); border-radius: 50%;
             width: 24px; height: 24px; font-size: 12px; font-weight: 600; cursor: pointer;
             display: flex; align-items: center; justify-content: center; padding: 0;
             transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
         }
-        #unknownFilesBtn:hover:not(:disabled) { background: #383c44; color: #ffffff; border-color: #525660; }
+        #unknownFilesBtn:hover:not(:disabled) { background: var(--bg-panel-hover); color: var(--text-main); border-color: #525660; }
         #unknownFilesBtn:disabled { opacity: 0.35; cursor: not-allowed; }
 
         /* =========================================================
@@ -100,17 +114,17 @@
         ========================================================= */
         #sidebar {
             position: absolute; left: 22px; bottom: 65px; display: flex; flex-direction: column; gap: 8px; z-index: 20;
-            background: rgba(27, 29, 32, 0.85); border: 1px solid #303238; padding: 14px; border-radius: 10px;
+            background: rgba(27, 29, 32, 0.85); border: 1px solid var(--border-main); padding: 14px; border-radius: 10px;
             backdrop-filter: blur(8px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); opacity: 0.3; transition: opacity 0.2s ease;
             width: 160px;
         }
         #sidebar:hover { opacity: 1; }
         #sidebar button {
             height: 34px; padding: 0 12px; font-size: 12px; font-weight: 500;
-            background: #2b2e34; color: #d1d5db; border: 1px solid #3b3e44; border-radius: 6px;
+            background: var(--bg-panel); color: #d1d5db; border: 1px solid var(--border-light); border-radius: 6px;
             text-align: left; white-space: nowrap; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.08s ease;
         }
-        #sidebar button:hover:not(:disabled) { background: #383c44; color: #ffffff; border-color: #525660; }
+        #sidebar button:hover:not(:disabled) { background: var(--bg-panel-hover); color: var(--text-main); border-color: #525660; }
         #sidebar button:active { transform: translateY(1px); }
         #sidebar button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
 
@@ -120,11 +134,11 @@
         }
         #sidebar input[type="file"]::file-selector-button {
             width: 100%; height: 34px; margin-right: 0; padding: 0 12px; margin-bottom: 0; display: block;
-            border: 1px solid #f2efe9; border-radius: 6px; background: #f2efe9; color: #111214;
+            border: 1px solid var(--accent-beige); border-radius: 6px; background: var(--accent-beige); color: var(--bg-main);
             font-family: inherit; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
             text-align: left; font-weight: 600; font-size: 12px;
         }
-        #sidebar input[type="file"]::file-selector-button:hover { background: #e2dfd9; border-color: #e2dfd9; }
+        #sidebar input[type="file"]::file-selector-button:hover { background: var(--accent-beige-hover); border-color: var(--accent-beige-hover); }
 
         /* SWITCH */
         .switch-container {
@@ -133,22 +147,22 @@
         }
         .switch-input { display: none; }
         .switch-track {
-            width: 34px; height: 20px; background: #2b2e34; border: 1px solid #3b3e44;
+            width: 34px; height: 20px; background: var(--bg-panel); border: 1px solid var(--border-light);
             border-radius: 10px; position: relative; transition: background 0.15s ease, border-color 0.15s ease;
         }
         .switch-thumb {
-            width: 14px; height: 14px; background: #85888f; border-radius: 50%;
+            width: 14px; height: 14px; background: var(--text-muted); border-radius: 50%;
             position: absolute; top: 2px; left: 2px; transition: transform 0.15s ease, background 0.15s ease;
         }
         .switch-input:checked + .switch-track { background: #4f545c; border-color: #686d76; }
-        .switch-input:checked + .switch-track .switch-thumb { transform: translateX(14px); background: #ffffff; }
+        .switch-input:checked + .switch-track .switch-thumb { transform: translateX(14px); background: var(--text-main); }
 
         /* =========================================================
            MAIN & VIEWER
         ========================================================= */
         main {
             position: relative; display: flex; align-items: center; justify-content: center;
-            flex: 1; min-height: 0; overflow: hidden; background: radial-gradient(circle at center, #1b1d21 0%, #111214 72%);
+            flex: 1; min-height: 0; overflow: hidden; background: radial-gradient(circle at center, #1b1d21 0%, var(--bg-main) 72%);
         }
         #reference {
             display: none; max-width: 100%; max-height: 100%; object-fit: contain;
@@ -169,7 +183,7 @@
         ========================================================= */
         #toastOverlay {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(10px);
-            background: rgba(0, 0, 0, 0.8); color: #ffffff; padding: 10px 22px; border-radius: 20px;
+            background: rgba(0, 0, 0, 0.8); color: var(--text-main); padding: 10px 22px; border-radius: 20px;
             font-size: 15px; font-weight: 600; letter-spacing: 0.5px; pointer-events: none; opacity: 0;
             transition: opacity 0.25s ease, transform 0.25s ease; z-index: 50; backdrop-filter: blur(4px);
             border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
@@ -182,7 +196,7 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); color: white; font-size: 21px; font-weight: 600;
             font-variant-numeric: tabular-nums; text-align: center; backdrop-filter: blur(5px); transition: all 0.3s ease;
         }
-        #timer.warning { color: #111214; background: #f2efe9; border-color: #f2efe9; box-shadow: 0 4px 20px rgba(242, 239, 233, 0.2); }
+        #timer.warning { color: var(--bg-main); background: var(--accent-beige); border-color: var(--accent-beige); box-shadow: 0 4px 20px rgba(242, 239, 233, 0.2); }
 
         #filename {
             position: absolute; left: 22px; bottom: 22px; display: none; max-width: calc(100% - 180px);
@@ -199,34 +213,35 @@
             background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;
         }
         .modal.open { display: flex; }
-        .modal-content { background: #1b1d20; border: 1px solid #303238; border-radius: 10px; width: 90%; max-width: 550px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); overflow: hidden; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid #303238; }
-        .modal-header h3 { margin: 0; font-size: 16px; color: #ffffff; }
+        .modal-content { background: var(--bg-header); border: 1px solid var(--border-main); border-radius: 10px; width: 90%; max-width: 550px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); overflow: hidden; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border-main); }
+        .modal-header h3 { margin: 0; font-size: 16px; color: var(--text-main); }
         .modal-actions { display: flex; align-items: center; gap: 12px; }
-        #unbanAllButton, #unfavAllButton { height: 28px; padding: 0 10px; font-size: 12px; background: #2b2e34; border: 1px solid #3b3e44; color: #e1e3e8; border-radius: 5px; cursor: pointer; }
-        #unbanAllButton:hover, #unfavAllButton:hover { background: #383c44; color: #ffffff; }
-        .modal-close { background: transparent; border: none; color: #85888f; font-size: 22px; cursor: pointer; padding: 0 4px; height: auto; }
-        .modal-close:hover { color: #ffffff; }
+        #unbanAllButton, #unfavAllButton { height: 28px; padding: 0 10px; font-size: 12px; background: var(--bg-panel); border: 1px solid var(--border-light); color: #e1e3e8; border-radius: 5px; cursor: pointer; }
+        #unbanAllButton:hover, #unfavAllButton:hover { background: var(--bg-panel-hover); color: var(--text-main); }
+        .modal-close { background: transparent; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 0 4px; height: auto; }
+        .modal-close:hover { color: var(--text-main); }
         
         #bannedList, #favList, #unknownList { padding: 15px 20px; overflow-y: auto; max-height: 60vh; display: flex; flex-direction: column; gap: 8px; }
 
         .banned-item, .fav-item, .unknown-item { display: flex; align-items: center; gap: 12px; background: #23262b; padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #d1d5db; }
-        .banned-item:hover, .fav-item:hover { background: #35383e; color: #ffffff; }
+        .banned-item:hover, .fav-item:hover { background: #35383e; color: var(--text-main); }
         
-        .banned-thumb, .fav-thumb { width: 42px; height: 42px; object-fit: cover; border-radius: 4px; background: #101113; flex-shrink: 0; cursor: pointer; transition: opacity 0.15s; }
+        .banned-thumb, .fav-thumb { width: 42px; height: 42px; object-fit: cover; border-radius: 4px; background: var(--bg-dark); flex-shrink: 0; cursor: pointer; transition: opacity 0.15s; }
         .banned-thumb:hover, .fav-thumb:hover { opacity: 0.8; }
-        .banned-thumb-placeholder, .fav-thumb-placeholder { width: 42px; height: 42px; border-radius: 4px; background: #101113; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #555; flex-shrink: 0; }
+        .banned-thumb-placeholder, .fav-thumb-placeholder { width: 42px; height: 42px; border-radius: 4px; background: var(--bg-dark); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #555; flex-shrink: 0; }
         .banned-item-name, .fav-item-name, .unknown-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         
         .remove-btn {
-            background: #2b2e34; border: 1px solid #3b3e44; color: #e1e3e8; border-radius: 5px;
+            background: var(--bg-panel); border: 1px solid var(--border-light); color: #e1e3e8; border-radius: 5px;
             padding: 4px 10px; font-size: 11px; cursor: pointer; transition: background 0.15s, color 0.15s;
         }
-        .remove-btn:hover { background: #d93838; color: #ffffff; border-color: #d93838; }
+        .remove-btn:hover { background: #d93838; color: var(--text-main); border-color: #d93838; }
 
         @media (max-width: 1550px) {
             header { gap: 10px; padding: 8px; }
             .input-container { width: 125px; }
+            .input-container-wide { width: 200px; }
             #status-container { display: none; }
         }
     </style>
@@ -237,8 +252,16 @@
          HEADER
     ========================================================== -->
     <header>
-        <div class="zone zone-duration" title="Duration">
-            <input id="durationInput" type="text" placeholder="10:00" value="01:00">
+        <input id="durationInput" type="text" placeholder="10:00" value="01:00">
+
+        <!-- ZONE D'ALTERNANCE DE TAGS (SÉQUENCE) -->
+        <div class="zone zone-light" title="Alternating Tag Sequence (e.g. male, fem)">
+            <div class="zone-group">
+                <span class="zone-label">SEQ</span>
+                <div class="input-container round-right">
+                    <input id="sequenceInput" type="text" placeholder="male, hands, animal..." autocomplete="off" spellcheck="false">
+                </div>
+            </div>
         </div>
 
         <div class="filter-zones">
@@ -251,7 +274,7 @@
                 </div>
                 <div class="zone-group">
                     <span class="zone-label">OR</span>
-                    <div class="input-container">
+                    <div class="input-container round-right">
                         <input id="orSelectInput" type="text" placeholder="portrait, hands..." autocomplete="off" spellcheck="false">
                     </div>
                 </div>
@@ -266,17 +289,17 @@
                 </div>
                 <div class="zone-group">
                     <span class="zone-label">OR</span>
-                    <div class="input-container">
+                    <div class="input-container round-right">
                         <input id="orExcludeInput" type="text" placeholder="feet, head..." autocomplete="off" spellcheck="false">
                     </div>
                 </div>
             </div>
         </div>
 
-        <button id="goButton">Go (Space)</button>
-        <button id="pauseButton" disabled>Pause (Space)</button>
-        <button id="prevButton" disabled>◀ (Q)</button>
-        <button id="nextButton" disabled>▶ (D)</button>
+        <button id="goButton">Go</button>
+        <button id="prevButton" disabled>◀</button>
+        <button id="nextButton" disabled>▶</button>
+        <button id="pauseButton" disabled>❚❚</button>
 
         <div id="status-container">
             <span id="status">No directory selected.</span>
@@ -404,6 +427,7 @@
         const DOM = {
             folder: document.getElementById("folderInput"), duration: document.getElementById("durationInput"),
             onlyFavCheckbox: document.getElementById("onlyFavCheckbox"),
+            sequenceInput: document.getElementById("sequenceInput"),
             andSelect: document.getElementById("andSelectInput"), orSelect: document.getElementById("orSelectInput"),
             andExclude: document.getElementById("andExcludeInput"), orExclude: document.getElementById("orExcludeInput"),
             go: document.getElementById("goButton"), pause: document.getElementById("pauseButton"),
@@ -430,7 +454,7 @@
             toastTimeout: null, renderTimeout: null
         };
 
-        const COOKIE_NAME = "drawingTimerSettingsV2";
+        const COOKIE_NAME = "drawingTimerSettingsV3";
         const BANNED_COOKIE_NAME = "drawingTimerBanned";
         const FAV_COOKIE_NAME = "drawingTimerFavorites";
         const COOKIE_DAYS = 365;
@@ -440,7 +464,8 @@
         ========================================================= */
         function saveSettings() {
             const data = {
-                durationText: DOM.duration.value, andSelect: DOM.andSelect.value, orSelect: DOM.orSelect.value,
+                durationText: DOM.duration.value, sequence: DOM.sequenceInput.value,
+                andSelect: DOM.andSelect.value, orSelect: DOM.orSelect.value,
                 andExclude: DOM.andExclude.value, orExclude: DOM.orExclude.value, onlyFavorites: DOM.onlyFavCheckbox.checked
             };
             const expires = new Date(Date.now() + COOKIE_DAYS * 24 * 3600 * 1000).toUTCString();
@@ -453,6 +478,7 @@
             try {
                 const data = JSON.parse(decodeURIComponent(cookie.trim().substring(COOKIE_NAME.length + 1)));
                 if (data.durationText) DOM.duration.value = data.durationText;
+                if (data.sequence !== undefined) DOM.sequenceInput.value = data.sequence;
                 if (data.andSelect !== undefined) DOM.andSelect.value = data.andSelect;
                 if (data.orSelect !== undefined) DOM.orSelect.value = data.orSelect;
                 if (data.andExclude !== undefined) DOM.andExclude.value = data.andExclude;
@@ -534,12 +560,12 @@
             showPreview();
         }
 
-        function updatePool() {
+        function getFilteredFiles() {
             const n = t => String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
             const getTags = el => el.value.split(",").map(n).filter(t => t.length > 0);
             const andSel = getTags(DOM.andSelect), orSel = getTags(DOM.orSelect), andExc = getTags(DOM.andExclude), orExc = getTags(DOM.orExclude);
             
-            state.pool = state.images.filter(file => {
+            return state.images.filter(file => {
                 if (state.banned.includes(file.name)) return false;
                 if (DOM.onlyFavCheckbox.checked && !state.favorites.includes(file.name)) return false;
                 const name = n(file.name);
@@ -549,6 +575,10 @@
                 if (orExc.length && orExc.some(t => name.includes(t))) return false;
                 return true;
             });
+        }
+
+        function updatePool() {
+            state.pool = getFilteredFiles();
         }
 
         function updateIdleStatus() {
@@ -596,7 +626,7 @@
         function nextImage() {
             if (state.running) {
                 clearTimers(); state.seriesId++;
-                if (state.paused) { state.paused = false; DOM.pause.textContent = "Pause (Space)"; }
+                if (state.paused) { state.paused = false; DOM.pause.textContent = "❚❚"; }
                 showNextImage(state.seriesId);
             } else if (state.pool.length > 0) {
                 state.idleIndex = (state.idleIndex + 1) % state.pool.length; showImage(state.pool[state.idleIndex]);
@@ -609,7 +639,7 @@
                 while (target >= 0 && state.banned.includes(state.queue[target].name)) target--;
                 if (target >= 0) {
                     state.position = target; clearTimers(); state.seriesId++;
-                    if (state.paused) { state.paused = false; DOM.pause.textContent = "Pause (Space)"; }
+                    if (state.paused) { state.paused = false; DOM.pause.textContent = "❚❚"; }
                     showNextImage(state.seriesId);
                 }
             } else if (state.pool.length > 0) {
@@ -628,8 +658,46 @@
         }, { passive: false });
 
         /* =========================================================
-           SLIDESHOW TIMERS
+           SLIDESHOW TIMERS & SEQUENCE GENERATION
         ========================================================= */
+        function generateQueue() {
+            const availableFiles = getFilteredFiles();
+            const seqStr = DOM.sequenceInput.value.trim();
+            const n = t => String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+
+            if (!seqStr) return [...availableFiles].sort(() => Math.random() - 0.5);
+
+            const tags = seqStr.split(",").map(n).filter(t => t.length > 0);
+            if (tags.length === 0) return [...availableFiles].sort(() => Math.random() - 0.5);
+
+            const tagBuckets = tags.map(tag => {
+                return availableFiles
+                    .filter(file => n(file.name).includes(tag))
+                    .sort(() => Math.random() - 0.5);
+            });
+
+            const builtQueue = [];
+            const usedFileNames = new Set();
+            let addedSomething = true;
+
+            while (addedSomething) {
+                addedSomething = false;
+                for (let i = 0; i < tags.length; i++) {
+                    const bucket = tagBuckets[i];
+                    while (bucket.length > 0) {
+                        const chosenFile = bucket.pop(); 
+                        if (!usedFileNames.has(chosenFile.name)) {
+                            builtQueue.push(chosenFile);
+                            usedFileNames.add(chosenFile.name);
+                            addedSomething = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            return builtQueue;
+        }
+
         function startSeries() {
             updatePool();
             if (!state.images.length) return alert("Select a directory first.");
@@ -638,10 +706,18 @@
             if (dur <= 0) return alert("Time must be greater than 0.");
 
             state.duration = dur; saveSettings();
-            state.queue = [...state.pool].sort(() => Math.random() - 0.5);
+            
+            // Génération de la file d'attente selon la séquence ou l'aléatoire
+            state.queue = generateQueue();
+            
+            if (state.queue.length === 0) {
+                alert("No images matching the sequence tags.");
+                return;
+            }
+
             state.position = 0; state.seriesId++; state.running = true; state.paused = false;
             
-            DOM.go.textContent = "Stop (K)"; DOM.pause.textContent = "Pause (Space)";
+            DOM.go.textContent = "Stop (K)"; DOM.pause.textContent = "❚❚";
             updateActionButtons(); showNextImage(state.seriesId); showToast("Playing");
         }
 
@@ -684,16 +760,16 @@
             if (!state.running) return;
             state.paused = !state.paused;
             if (state.paused) {
-                clearTimers(); DOM.pause.textContent = "Play (Space)"; showToast("Paused");
+                clearTimers(); DOM.pause.textContent = "Play"; showToast("Paused");
             } else {
-                DOM.pause.textContent = "Pause (Space)"; runCountdown(state.seriesId);
+                DOM.pause.textContent = "❚❚"; runCountdown(state.seriesId);
                 scheduleNextImage(state.seriesId, state.secondsRemaining); showToast("Playing");
             }
         }
 
         function stopSeries() {
             state.seriesId++; state.running = false; state.paused = false; clearTimers();
-            DOM.go.textContent = "Go (Space)"; DOM.pause.textContent = "Pause (Space)";
+            DOM.go.textContent = "Go"; DOM.pause.textContent = "❚❚";
             DOM.timer.style.display = "none"; DOM.timer.classList.remove("warning");
             updateActionButtons(); showToast("Stopped");
         }
@@ -792,13 +868,27 @@
         }
 
         const handleTags = () => {
-            saveSettings(); if (state.running) return;
-            updatePool(); updateIdleStatus();
-            if (state.images.length > 0 && !state.pool.length) { hideImage(); showMessage("No matching images."); }
-            else if (state.pool.length > 0) showPreview();
+            let tagTimeout;
+            const handleTags = () => {
+                clearTimeout(tagTimeout);
+                // Ajout d'un délai de 300ms pour ne pas faire laguer l'app pendant la frappe des filtres AND/OR
+                tagTimeout = setTimeout(() => {
+                    saveSettings(); if (state.running) return;
+                    updatePool(); updateIdleStatus();
+                    if (state.images.length > 0 && !state.pool.length) { hideImage(); showMessage("No matching images."); }
+                    else if (state.pool.length > 0) showPreview();
+                }, 300);
+            };
+
+            // Application du rafraîchissement uniquement sur les filtres d'inclusion/exclusion
+            ['andSelect', 'orSelect', 'andExclude', 'orExclude'].forEach(id => DOM[id].addEventListener("input", handleTags));
+            DOM.onlyFavCheckbox.addEventListener("change", handleTags);
+            
+            // Le champ SEQ sauvegarde son contenu en silence sans déclencher de calculs lourds
+            DOM.sequenceInput.addEventListener("input", saveSettings);
         };
 
-        ['andSelect', 'orSelect', 'andExclude', 'orExclude'].forEach(id => DOM[id].addEventListener("input", handleTags));
+        ['sequenceInput', 'andSelect', 'orSelect', 'andExclude', 'orExclude'].forEach(id => DOM[id].addEventListener("input", handleTags));
         DOM.onlyFavCheckbox.addEventListener("change", handleTags);
         DOM.duration.addEventListener("change", () => { state.duration = parseTimeToSeconds(DOM.duration.value); saveSettings(); });
         DOM.folder.addEventListener("change", () => loadDirectory(DOM.folder.files, true));
