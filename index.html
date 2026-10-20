@@ -43,7 +43,7 @@
             display: flex; align-items: center; gap: 16px; min-height: 56px; padding: 8px 14px;
             background: var(--bg-header); border-bottom: 1px solid var(--border-main);
             box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3); z-index: 10;
-            flex-wrap: wrap; justify-content: center;
+            flex-wrap: wrap; justify-content: center; position: relative;
         }
 
         .filter-zones { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: center; }
@@ -64,56 +64,63 @@
         .zone-dark .zone-label { color: #9699a0; }
 
         .input-container {
-            position: relative; width: 200px; height: 36px; border-radius: 0px ; overflow: hidden;
+            position: relative; width: 200px; height: 36px; border-radius: 0px; overflow: hidden;
             transition: border-color 0.15s ease, box-shadow 0.15s ease; outline: none;
         }
 
-        .round-right {border-top-right-radius: 10px; border-bottom-right-radius: 10px;}
+        .round-right { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
 
         .input-container input {
             position: relative; z-index: 2; width: 100%; height: 100%; padding: 0 12px;
             border: none; background: transparent; outline: none; font-size: 14px; font-family: inherit;
         }
 
-        #durationInput {
+        .timer-inputs {
+            display: flex; gap: 6px; align-items: center;
+        }
+
+        #durationInput, #blinkInput, #blinkInputMobile {
             height: 36px; border: none; border-radius: 10px;
             background: var(--bg-dark); color: var(--text-main); outline: none; font-family: inherit;
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
             width: 75px; padding: 0 10px; text-align: center; font-size: 14px; font-variant-numeric: tabular-nums;
         }
 
-        #durationInput:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12); }
-        #durationInput::placeholder { color: var(--text-dim); }
+        #durationInput:focus, #blinkInput:focus, #blinkInputMobile:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12); }
+        #durationInput::placeholder, #blinkInput::placeholder, #blinkInputMobile::placeholder { color: var(--text-dim); }
 
         header button {
             height: 36px; padding: 0 20px; border: 1px solid var(--border-light); border-radius: 10px;
             background: var(--bg-panel); color: var(--accent-beige); font-family: inherit; font-size: 14px; font-weight: 600;
             cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.08s ease;
         }
-        header button:hover:not(:disabled) { background: var(--bg-panel-hover); border-color: #525660; color: var(--text-main);}
+        header button:hover:not(:disabled) { background: var(--bg-panel-hover); border-color: #525660; color: var(--text-main); }
         header button:active { transform: translateY(1px); }
-        header button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; display: none;}
+        header button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
 
         #goButton { background: var(--accent-beige); color: var(--bg-main); border-color: var(--accent-beige); }
         #goButton:hover:not(:disabled) { background: var(--accent-beige-hover); border-color: var(--accent-beige-hover); color: var(--bg-main); }
 
-        #status-container { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-        #status { color: var(--text-muted); font-size: 13px; white-space: nowrap; text-align: right; }
-        
-        #unknownFilesBtn {
-            background: var(--bg-panel); border: 1px solid var(--border-light); color: var(--text-muted); border-radius: 50%;
-            width: 24px; height: 24px; font-size: 12px; font-weight: 600; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; padding: 0;
-            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        /* Mobile Menu Toggle Button */
+        #menuToggleBtn {
+            display: none; background: var(--bg-panel); border: 1px solid var(--border-light);
+            color: var(--accent-beige); border-radius: 10px; height: 36px; padding: 0 14px; font-size: 14px; font-weight: 600; cursor: pointer;
         }
-        #unknownFilesBtn:hover:not(:disabled) { background: var(--bg-panel-hover); color: var(--text-main); border-color: #525660; }
-        #unknownFilesBtn:disabled { opacity: 0.35; cursor: not-allowed; }
+        #menuToggleBtn:hover { background: var(--bg-panel-hover); }
+
+        .desktop-filters {
+            display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .collapsible-filters {
+            display: none;
+        }
 
         /* =========================================================
            FLOATING SIDEBAR CONTROLS
         ========================================================= */
         #sidebar {
-            position: absolute; left: 22px; bottom: 65px; display: flex; flex-direction: column; gap: 8px; z-index: 20;
+            position: absolute; left: 22px; bottom: 110px; display: flex; flex-direction: column; gap: 8px; z-index: 20;
             background: rgba(27, 29, 32, 0.85); border: 1px solid var(--border-main); padding: 14px; border-radius: 10px;
             backdrop-filter: blur(8px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); opacity: 0.3; transition: opacity 0.2s ease;
             width: 160px;
@@ -128,7 +135,6 @@
         #sidebar button:active { transform: translateY(1px); }
         #sidebar button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
 
-        /* FILE INPUT */
         #sidebar input[type="file"] {
             width: 100%; color: transparent; font-family: inherit; font-size: 12px; margin-bottom: 0; height: 34px;
         }
@@ -140,7 +146,6 @@
         }
         #sidebar input[type="file"]::file-selector-button:hover { background: var(--accent-beige-hover); border-color: var(--accent-beige-hover); }
 
-        /* SWITCH */
         .switch-container {
             display: flex; align-items: center; justify-content: space-between;
             font-size: 12px; color: #d1d5db; cursor: pointer; padding: 4px 0; margin-bottom: 0; margin-top: 4px; user-select: none;
@@ -167,8 +172,11 @@
         #reference {
             display: none; max-width: 100%; max-height: 100%; object-fit: contain;
             user-select: none; -webkit-user-drag: none; 
-            transition: transform 0.25s cubic-bezier(0.15, 0.85, 0.35, 1), transform-origin 0.25s ease-out; 
+            transition: transform 0.25s cubic-bezier(0.15, 0.85, 0.35, 1), transform-origin 0.25s ease-out, filter 0.3s ease; 
             transform-origin: center center;
+        }
+        #reference.blurred {
+            filter: blur(80px);
         }
         #message { max-width: 650px; padding: 30px; color: #8a8d95; font-size: 18px; font-weight: 500; line-height: 1.6; text-align: center; }
         
@@ -181,7 +189,7 @@
         @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
         /* =========================================================
-           OVERLAYS
+           OVERLAYS & TOOLTIP
         ========================================================= */
         #toastOverlay {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(10px);
@@ -192,6 +200,29 @@
         }
         #toastOverlay.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+        /* Navbar Tooltip (Hover 1 second) */
+        #nav-tooltip {
+            position: absolute;
+            z-index: 1000;
+            background: rgba(15, 16, 18, 0.95);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.4;
+            max-width: 250px;
+            pointer-events: none;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            text-align: center;
+        }
+        #nav-tooltip.visible {
+            opacity: 1;
+        }
+
         #timer {
             position: absolute; right: 22px; bottom: 22px; display: none; min-width: 95px; padding: 9px 14px;
             border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; background: rgba(0, 0, 0, 0.72);
@@ -200,11 +231,33 @@
         }
         #timer.warning { color: var(--bg-main); background: var(--accent-beige); border-color: var(--accent-beige); box-shadow: 0 4px 20px rgba(242, 239, 233, 0.2); }
 
+        /* Bottom Left Info Panel */
+        #bottom-left-info {
+            position: absolute; left: 22px; bottom: 22px; display: flex; flex-direction: column; gap: 12px;
+            max-width: calc(100% - 44px); z-index: 25; pointer-events: none;
+        }
+        #bottom-left-info > * { pointer-events: auto; }
+
+        #status-bar-container {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(0, 0, 0, 0.42); padding: 4px 10px; border-radius: 6px; backdrop-filter: blur(3px);
+            width: fit-content;
+        }
+        #status { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+        
+        #unknownFilesBtn {
+            background: var(--bg-panel); border: 1px solid var(--border-light); color: var(--text-muted); border-radius: 50%;
+            width: 20px; height: 20px; font-size: 11px; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; padding: 0;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+        #unknownFilesBtn:hover:not(:disabled) { background: var(--bg-panel-hover); color: var(--text-main); border-color: #525660; }
+        #unknownFilesBtn:disabled { opacity: 0.35; cursor: not-allowed; }
+
         #filename {
-            position: absolute; left: 22px; bottom: 22px; display: none; max-width: calc(100% - 180px);
-            padding: 7px 11px; border-radius: 6px; background: rgba(0, 0, 0, 0.42); color: rgba(255, 255, 255, 0.58);
+            display: none; padding: 6px 10px; border-radius: 6px; background: rgba(0, 0, 0, 0.42); color: rgba(255, 255, 255, 0.58);
             font-size: 13px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            pointer-events: none; backdrop-filter: blur(3px);
+            backdrop-filter: blur(3px); width: fit-content; max-width: 100%;
         }
 
         /* =========================================================
@@ -219,20 +272,20 @@
         .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border-main); }
         .modal-header h3 { margin: 0; font-size: 16px; color: var(--text-main); }
         .modal-actions { display: flex; align-items: center; gap: 12px; }
-        #unbanAllButton, #unfavAllButton { height: 28px; padding: 0 10px; font-size: 12px; background: var(--bg-panel); border: 1px solid var(--border-light); color: #e1e3e8; border-radius: 5px; cursor: pointer; }
-        #unbanAllButton:hover, #unfavAllButton:hover { background: var(--bg-panel-hover); color: var(--text-main); }
+        #unbanAllButton, #unfavAllButton, #clearHistoryButton { height: 28px; padding: 0 10px; font-size: 12px; background: var(--bg-panel); border: 1px solid var(--border-light); color: #e1e3e8; border-radius: 5px; cursor: pointer; }
+        #unbanAllButton:hover, #unfavAllButton:hover, #clearHistoryButton:hover { background: var(--bg-panel-hover); color: var(--text-main); }
         .modal-close { background: transparent; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 0 4px; height: auto; }
         .modal-close:hover { color: var(--text-main); }
         
-        #bannedList, #favList, #unknownList { padding: 15px 20px; overflow-y: auto; max-height: 60vh; display: flex; flex-direction: column; gap: 8px; }
+        #bannedList, #favList, #historyList, #unknownList { padding: 15px 20px; overflow-y: auto; max-height: 60vh; display: flex; flex-direction: column; gap: 8px; }
 
-        .banned-item, .fav-item, .unknown-item { display: flex; align-items: center; gap: 12px; background: #23262b; padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #d1d5db; }
-        .banned-item:hover, .fav-item:hover { background: #35383e; color: var(--text-main); }
+        .list-item { display: flex; align-items: center; gap: 12px; background: #23262b; padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #d1d5db; }
+        .list-item:hover { background: #35383e; color: var(--text-main); }
         
-        .banned-thumb, .fav-thumb { width: 42px; height: 42px; object-fit: cover; border-radius: 4px; background: var(--bg-dark); flex-shrink: 0; cursor: pointer; transition: opacity 0.15s; }
-        .banned-thumb:hover, .fav-thumb:hover { opacity: 0.8; }
-        .banned-thumb-placeholder, .fav-thumb-placeholder { width: 42px; height: 42px; border-radius: 4px; background: var(--bg-dark); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #555; flex-shrink: 0; }
-        .banned-item-name, .fav-item-name, .unknown-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .item-thumb { width: 42px; height: 42px; object-fit: cover; border-radius: 4px; background: var(--bg-dark); flex-shrink: 0; cursor: pointer; transition: opacity 0.15s; }
+        .item-thumb:hover { opacity: 0.8; }
+        .item-thumb-placeholder { width: 42px; height: 42px; border-radius: 4px; background: var(--bg-dark); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #555; flex-shrink: 0; }
+        .item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         
         .remove-btn {
             background: var(--bg-panel); border: 1px solid var(--border-light); color: #e1e3e8; border-radius: 5px;
@@ -240,72 +293,139 @@
         }
         .remove-btn:hover { background: #d93838; color: var(--text-main); border-color: #d93838; }
 
-        @media (max-width: 1550px) {
-            header { gap: 10px; padding: 8px; }
-            .input-container { width: 125px; }
-            .input-container-wide { width: 200px; }
-            #status-container { display: none; }
+        /* =========================================================
+           RESPONSIVE RULES (< 1800px)
+        ========================================================= */
+        @media (max-width: 1800px) {
+            #menuToggleBtn { display: inline-flex; align-items: center; justify-content: center; }
+            .desktop-filters {
+                display: none !important;
+            }
+            .collapsible-filters {
+                display: none; position: absolute; top: 100%; left: 0; width: 100%; max-height: calc(100vh - 60px);
+                background: var(--bg-header); border-bottom: 1px solid var(--border-main);
+                padding: 14px; flex-direction: column; gap: 12px; z-index: 100; overflow-y: auto;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            }
+            .collapsible-filters.open { display: flex; }
         }
     </style>
 </head>
 
 <body>
+    <!-- Dynamic Navbar Tooltip -->
+    <div id="nav-tooltip"></div>
+
     <!-- =========================================================
          HEADER
     ========================================================== -->
     <header>
-        <input id="durationInput" type="text" placeholder="10:00" value="01:00">
+        <div class="timer-inputs" data-help="Duration for each image display (e.g., 01:00 for 1 min, 30s, etc.).">
+            <input id="durationInput" type="text" placeholder="10:00" value="01:00">
+        </div>
 
-        <!-- SEQUENCE TAG ZONE -->
-        <div class="zone zone-light" title="Alternating Tag Sequence (e.g. male, fem)">
-            <div class="zone-group">
-                <span class="zone-label">SEQ</span>
-                <div class="input-container round-right">
-                    <input id="sequenceInput" type="text" placeholder="male, hands, animal..." autocomplete="off" spellcheck="false">
+        <button id="goButton" data-help="Start or Stop the timed image slideshow (Shortcut: Space / K).">Go</button>
+        <button id="prevButton" disabled data-help="Previous image in the series (Shortcut: Left Arrow / Q).">◀</button>
+        <button id="nextButton" disabled data-help="Next image in the series (Shortcut: Right Arrow / D).">▶</button>
+        <button id="pauseButton" disabled data-help="Pause or resume the timer (Shortcut: Space).">❚❚</button>
+        
+        <button id="menuToggleBtn" data-help="Toggle filters on smaller screens.">Filters & Options ▾</button>
+
+        <!-- DESKTOP FILTERS (Visible on large screens) -->
+        <div class="desktop-filters">
+            <div class="timer-inputs" data-help="Temporal blur effect: delay before blur (e.g., 5s) or delay:reveal_duration (e.g., 3s:10s).">
+                <input id="blinkInput" type="text" placeholder="3s:10s" value="">
+            </div>
+
+            <!-- SEQUENCE TAG ZONE -->
+            <div class="zone zone-light" data-help="Alternating tag sequence separated by commas (e.g., male, female, animal)." style="cursor: help;">
+                <div class="zone-group">
+                    <span class="zone-label">SEQ</span>
+                    <div class="input-container round-right">
+                        <input id="sequenceInput" type="text" placeholder="male, hands, animal..." autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-zones">
+                <div class="zone zone-light" data-help="Selection: Only images containing ALL AND tags AND at least ONE OR tag will be displayed.">
+                    <div class="zone-group">
+                        <span class="zone-label">AND</span>
+                        <div class="input-container">
+                            <input id="andSelectInput" type="text" placeholder="male, clothed..." autocomplete="off" spellcheck="false">
+                        </div>
+                    </div>
+                    <div class="zone-group">
+                        <span class="zone-label">OR</span>
+                        <div class="input-container round-right">
+                            <input id="orSelectInput" type="text" placeholder="portrait, hands..." autocomplete="off" spellcheck="false">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="zone zone-dark" data-help="Discrimination: Exclude images containing ALL AND tags OR at least ONE OR tag.">
+                    <div class="zone-group">
+                        <span class="zone-label">AND</span>
+                        <div class="input-container">
+                            <input id="andExcludeInput" type="text" placeholder="female, out..." autocomplete="off" spellcheck="false">
+                        </div>
+                    </div>
+                    <div class="zone-group">
+                        <span class="zone-label">OR</span>
+                        <div class="input-container round-right">
+                            <input id="orExcludeInput" type="text" placeholder="feet, head..." autocomplete="off" spellcheck="false">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="filter-zones">
-            <div class="zone zone-light" title="Selection (Must contain)">
-                <div class="zone-group">
-                    <span class="zone-label">AND</span>
-                    <div class="input-container">
-                        <input id="andSelectInput" type="text" placeholder="male, clothed..." autocomplete="off" spellcheck="false">
-                    </div>
-                </div>
-                <div class="zone-group">
-                    <span class="zone-label">OR</span>
-                    <div class="input-container round-right">
-                        <input id="orSelectInput" type="text" placeholder="portrait, hands..." autocomplete="off" spellcheck="false">
+        <!-- COLLAPSIBLE SECTION FOR SMALL SCREENS -->
+        <div class="collapsible-filters" id="collapsibleFilters">
+            <div class="timer-inputs" style="width: 100%; justify-content: center;" data-help="Temporal blur effect (blur:reveal).">
+                <input id="blinkInputMobile" type="text" placeholder="3s:10s" value="" style="height: 36px; border: none; border-radius: 10px; background: var(--bg-dark); color: var(--text-main); outline: none; width: 100px; text-align: center; font-size: 14px;">
+            </div>
+
+            <div class="zone zone-light" style="width: 100%;" data-help="Alternating tag sequence.">
+                <div class="zone-group" style="width: 100%;">
+                    <span class="zone-label">SEQ</span>
+                    <div class="input-container round-right" style="flex: 1; width: auto;">
+                        <input id="sequenceInputMobile" type="text" placeholder="male, hands, animal..." autocomplete="off" spellcheck="false">
                     </div>
                 </div>
             </div>
 
-            <div class="zone zone-dark" title="Discrimination (Exclude if contains)">
-                <div class="zone-group">
-                    <span class="zone-label">AND</span>
-                    <div class="input-container">
-                        <input id="andExcludeInput" type="text" placeholder="female, out..." autocomplete="off" spellcheck="false">
+            <div class="filter-zones" style="width: 100%;">
+                <div class="zone zone-light" style="width: 100%;" data-help="Inclusions (AND / OR).">
+                    <div class="zone-group" style="width: 50%;">
+                        <span class="zone-label">AND</span>
+                        <div class="input-container" style="flex: 1; width: auto;">
+                            <input id="andSelectInputMobile" type="text" placeholder="male, clothed..." autocomplete="off" spellcheck="false">
+                        </div>
+                    </div>
+                    <div class="zone-group" style="width: 50%;">
+                        <span class="zone-label">OR</span>
+                        <div class="input-container round-right" style="flex: 1; width: auto;">
+                            <input id="orSelectInputMobile" type="text" placeholder="portrait, hands..." autocomplete="off" spellcheck="false">
+                        </div>
                     </div>
                 </div>
-                <div class="zone-group">
-                    <span class="zone-label">OR</span>
-                    <div class="input-container round-right">
-                        <input id="orExcludeInput" type="text" placeholder="feet, head..." autocomplete="off" spellcheck="false">
+
+                <div class="zone zone-dark" style="width: 100%;" data-help="Exclusions (AND / OR).">
+                    <div class="zone-group" style="width: 50%;">
+                        <span class="zone-label">AND</span>
+                        <div class="input-container" style="flex: 1; width: auto;">
+                            <input id="andExcludeInputMobile" type="text" placeholder="female, out..." autocomplete="off" spellcheck="false">
+                        </div>
+                    </div>
+                    <div class="zone-group" style="width: 50%;">
+                        <span class="zone-label">OR</span>
+                        <div class="input-container round-right" style="flex: 1; width: auto;">
+                            <input id="orExcludeInputMobile" type="text" placeholder="feet, head..." autocomplete="off" spellcheck="false">
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <button id="goButton">Go</button>
-        <button id="prevButton" disabled>◀</button>
-        <button id="nextButton" disabled>▶</button>
-        <button id="pauseButton" disabled>❚❚</button>
-
-        <div id="status-container">
-            <span id="status">No directory selected.</span>
-            <button id="unknownFilesBtn" title="View files not recognized as images" disabled>?</button>
         </div>
     </header>
 
@@ -313,12 +433,13 @@
          SIDEBAR CONTROLS
     ========================================================== -->
     <div id="sidebar">
-        <input id="folderInput" type="file" webkitdirectory directory multiple title="Browse directory">
+        <input id="folderInput" type="file" webkitdirectory directory multiple title="Load an image folder">
         
         <button id="banButton" disabled>Ban (X)</button>
         <button id="bannedMenuButton">Banned (L)</button>
         <button id="favButton" disabled>Favorite (F)</button>
         <button id="favMenuButton">Favorites (M)</button>
+        <button id="historyMenuButton">History (H)</button>
 
         <label class="switch-container" title="Show only favorite images">
             <span>Only Favorites</span>
@@ -331,17 +452,25 @@
          MAIN
     ========================================================== -->
     <main>
-        <div id="message">Select a directory from the bottom left panel.</div>
+        <div id="message">Select a folder using the bottom left panel.</div>
         <div id="loading">Loading...</div>
         <img id="reference" alt="Reference image">
-        <div id="filename"></div>
+        
+        <div id="bottom-left-info">
+            <div id="status-bar-container">
+                <span id="status">No folder selected.</span>
+                <button id="unknownFilesBtn" title="View files not recognized as images" disabled>?</button>
+            </div>
+            <div id="filename"></div>
+        </div>
+
         <div id="toastOverlay"></div>
         <div id="timer">01:00</div>
     </main>
 
     <!-- =========================================================
          MODALS
-    ========================================================== -->
+    ========================================================= -->
     <div id="bannedModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -358,7 +487,7 @@
     <div id="favModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Favourite Images</h3>
+                <h3>Favorite Images</h3>
                 <div class="modal-actions">
                     <button id="unfavAllButton">Clear All</button>
                     <button id="closeFavModal" class="modal-close">&times;</button>
@@ -368,10 +497,23 @@
         </div>
     </div>
 
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Recent History</h3>
+                <div class="modal-actions">
+                    <button id="clearHistoryButton">Clear</button>
+                    <button id="closeHistoryModal" class="modal-close">&times;</button>
+                </div>
+            </div>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
     <div id="unknownModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Files not recognized as images</h3>
+                <h3>Unrecognized Files</h3>
                 <button id="closeUnknownModal" class="modal-close">&times;</button>
             </div>
             <div id="unknownList"></div>
@@ -427,11 +569,23 @@
            DOM & STATE
         ========================================================= */
         const DOM = {
-            folder: document.getElementById("folderInput"), duration: document.getElementById("durationInput"),
+            folder: document.getElementById("folderInput"), 
+            duration: document.getElementById("durationInput"),
+            blink: document.getElementById("blinkInput"),
+            blinkMobile: document.getElementById("blinkInputMobile"),
+            menuToggleBtn: document.getElementById("menuToggleBtn"),
+            collapsibleFilters: document.getElementById("collapsibleFilters"),
             onlyFavCheckbox: document.getElementById("onlyFavCheckbox"),
             sequenceInput: document.getElementById("sequenceInput"),
-            andSelect: document.getElementById("andSelectInput"), orSelect: document.getElementById("orSelectInput"),
-            andExclude: document.getElementById("andExcludeInput"), orExclude: document.getElementById("orExcludeInput"),
+            sequenceInputMobile: document.getElementById("sequenceInputMobile"),
+            andSelect: document.getElementById("andSelectInput"), 
+            andSelectMobile: document.getElementById("andSelectInputMobile"), 
+            orSelect: document.getElementById("orSelectInput"), 
+            orSelectMobile: document.getElementById("orSelectInputMobile"),
+            andExclude: document.getElementById("andExcludeInput"), 
+            andExcludeMobile: document.getElementById("andExcludeInputMobile"), 
+            orExclude: document.getElementById("orExcludeInput"), 
+            orExcludeMobile: document.getElementById("orExcludeInputMobile"),
             go: document.getElementById("goButton"), pause: document.getElementById("pauseButton"),
             next: document.getElementById("nextButton"), prev: document.getElementById("prevButton"),
             ban: document.getElementById("banButton"), bannedMenu: document.getElementById("bannedMenuButton"),
@@ -440,35 +594,94 @@
             fav: document.getElementById("favButton"), favMenu: document.getElementById("favMenuButton"),
             favModal: document.getElementById("favModal"), closeFavModal: document.getElementById("closeFavModal"),
             unfavAll: document.getElementById("unfavAllButton"), favList: document.getElementById("favList"),
+            historyMenu: document.getElementById("historyMenuButton"), historyModal: document.getElementById("historyModal"),
+            closeHistoryModal: document.getElementById("closeHistoryModal"), clearHistory: document.getElementById("clearHistoryButton"),
+            historyList: document.getElementById("historyList"),
             unknownBtn: document.getElementById("unknownFilesBtn"), unknownModal: document.getElementById("unknownModal"),
             closeUnknownModal: document.getElementById("closeUnknownModal"), unknownList: document.getElementById("unknownList"),
             status: document.getElementById("status"), image: document.getElementById("reference"),
             filename: document.getElementById("filename"), message: document.getElementById("message"),
-            loading: document.getElementById("loading"), timer: document.getElementById("timer"), toast: document.getElementById("toastOverlay")
+            loading: document.getElementById("loading"), timer: document.getElementById("timer"), toast: document.getElementById("toastOverlay"),
+            navTooltip: document.getElementById("nav-tooltip")
         };
 
         const state = {
             files: [], images: [], unknownFiles: [], pool: [], queue: [],
             position: 0, idleIndex: 0, running: false, paused: false,
-            duration: 60, secondsRemaining: 60, imageTimer: null, countdownTimer: null,
+            duration: 60, blinkBlurDelay: 0, blinkRevealDuration: 0, secondsRemaining: 60, 
+            imageTimer: null, countdownTimer: null,
             seriesId: 0, objectURL: null, currentFile: null,
-            banned: [], favorites: [], zoomLevel: 1, modalThumbURLs: [], favModalThumbURLs: [],
-            toastTimeout: null, renderTimeout: null
+            banned: [], favorites: [], history: [], zoomLevel: 1, 
+            modalThumbURLs: [],
+            renderTimeout: null, toastTimeout: null
         };
 
-        const COOKIE_NAME = "drawingTimerSettingsV3";
+        const COOKIE_NAME = "drawingTimerSettingsV8";
         const BANNED_COOKIE_NAME = "drawingTimerBanned";
         const FAV_COOKIE_NAME = "drawingTimerFavorites";
+        const HISTORY_COOKIE_NAME = "drawingTimerHistory";
         const COOKIE_DAYS = 365;
+
+        /* =========================================================
+           NAVBAR TOOLTIP SYSTEM (1-Second Hover)
+        ========================================================= */
+        let tooltipTimer = null;
+
+        function setupNavbarTooltips() {
+            const elementsWithHelp = document.querySelectorAll("header [data-help]");
+            
+            elementsWithHelp.forEach(el => {
+                el.addEventListener("mouseenter", () => {
+                    const text = el.getAttribute("data-help");
+                    if (!text) return;
+                    
+                    clearTimeout(tooltipTimer);
+                    tooltipTimer = setTimeout(() => {
+                        DOM.navTooltip.textContent = text;
+                        
+                        const rect = el.getBoundingClientRect();
+                        const tooltipRect = DOM.navTooltip.getBoundingClientRect();
+                        
+                        let top = rect.bottom + 8;
+                        let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+                        
+                        // Keep tooltip within viewport bounds
+                        if (left < 10) left = 10;
+                        if (left + tooltipRect.width > window.innerWidth - 10) {
+                            left = window.innerWidth - tooltipRect.width - 10;
+                        }
+
+                        DOM.navTooltip.style.top = `${top}px`;
+                        DOM.navTooltip.style.left = `${left}px`;
+                        DOM.navTooltip.classList.add("visible");
+                    }, 1000); // 1 second
+                });
+
+                el.addEventListener("mouseleave", () => {
+                    clearTimeout(tooltipTimer);
+                    DOM.navTooltip.classList.remove("visible");
+                });
+            });
+        }
 
         /* =========================================================
            HELPERS & SETTINGS
         ========================================================= */
+        function syncInputValue(desktopEl, mobileEl, val) {
+            if (desktopEl) desktopEl.value = val;
+            if (mobileEl) mobileEl.value = val;
+        }
+
         function saveSettings() {
             const data = {
-                durationText: DOM.duration.value, sequence: DOM.sequenceInput.value,
-                andSelect: DOM.andSelect.value, orSelect: DOM.orSelect.value,
-                andExclude: DOM.andExclude.value, orExclude: DOM.orExclude.value, onlyFavorites: DOM.onlyFavCheckbox.checked
+                durationText: DOM.duration.value, 
+                blinkText: DOM.blink.value, 
+                sequence: DOM.sequenceInput.value,
+                andSelect: DOM.andSelect.value, 
+                orSelect: DOM.orSelect.value,
+                andExclude: DOM.andExclude.value, 
+                orExclude: DOM.orExclude.value, 
+                onlyFavorites: DOM.onlyFavCheckbox.checked
             };
             const expires = new Date(Date.now() + COOKIE_DAYS * 24 * 3600 * 1000).toUTCString();
             document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(data))}; expires=${expires}; path=/; SameSite=Lax`;
@@ -480,11 +693,24 @@
             try {
                 const data = JSON.parse(decodeURIComponent(cookie.trim().substring(COOKIE_NAME.length + 1)));
                 if (data.durationText) DOM.duration.value = data.durationText;
-                if (data.sequence !== undefined) DOM.sequenceInput.value = data.sequence;
-                if (data.andSelect !== undefined) DOM.andSelect.value = data.andSelect;
-                if (data.orSelect !== undefined) DOM.orSelect.value = data.orSelect;
-                if (data.andExclude !== undefined) DOM.andExclude.value = data.andExclude;
-                if (data.orExclude !== undefined) DOM.orExclude.value = data.orExclude;
+                if (data.blinkText !== undefined) {
+                    syncInputValue(DOM.blink, DOM.blinkMobile, data.blinkText);
+                }
+                if (data.sequence !== undefined) {
+                    syncInputValue(DOM.sequenceInput, DOM.sequenceInputMobile, data.sequence);
+                }
+                if (data.andSelect !== undefined) {
+                    syncInputValue(DOM.andSelect, DOM.andSelectMobile, data.andSelect);
+                }
+                if (data.orSelect !== undefined) {
+                    syncInputValue(DOM.orSelect, DOM.orSelectMobile, data.orSelect);
+                }
+                if (data.andExclude !== undefined) {
+                    syncInputValue(DOM.andExclude, DOM.andExcludeMobile, data.andExclude);
+                }
+                if (data.orExclude !== undefined) {
+                    syncInputValue(DOM.orExclude, DOM.orExcludeMobile, data.orExclude);
+                }
                 if (data.onlyFavorites !== undefined) DOM.onlyFavCheckbox.checked = data.onlyFavorites;
             } catch (e) {}
         }
@@ -503,13 +729,31 @@
         }
 
         function parseTimeToSeconds(inputStr) {
-            const str = String(inputStr || "").trim();
-            if (!str.includes(":")) return parseFloat(str) > 0 ? parseFloat(str) : 60;
+            const str = String(inputStr || "").trim().toLowerCase();
+            if (!str) return 0;
+            if (str.endsWith("s")) return parseFloat(str) || 0;
+            if (str.endsWith("m")) return (parseFloat(str) || 0) * 60;
+            if (str.endsWith("h")) return (parseFloat(str) || 0) * 3600;
+
+            if (!str.includes(":")) return parseFloat(str) > 0 ? parseFloat(str) : 0;
             const parts = str.split(":").map(p => parseFloat(p.trim()));
-            if (parts.some(isNaN)) return 60;
+            if (parts.some(isNaN)) return 0;
             if (parts.length === 2) return (parts[0] * 60) + parts[1];
             if (parts.length === 3) return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
-            return 60;
+            return 0;
+        }
+
+        function parseBlinkInput(inputStr) {
+            const str = String(inputStr || "").trim();
+            if (!str) return { blurDelay: 0, revealDuration: 0 };
+            if (!str.includes(":")) {
+                return { blurDelay: parseTimeToSeconds(str), revealDuration: 0 };
+            }
+            const parts = str.split(":");
+            return {
+                blurDelay: parseTimeToSeconds(parts[0]),
+                revealDuration: parseTimeToSeconds(parts[1])
+            };
         }
 
         function formatDuration(seconds) {
@@ -521,6 +765,13 @@
             DOM.toast.textContent = text; DOM.toast.classList.add("show");
             if (state.toastTimeout) clearTimeout(state.toastTimeout);
             state.toastTimeout = setTimeout(() => DOM.toast.classList.remove("show"), 1000);
+        }
+
+        function addToHistory(fileName) {
+            state.history = state.history.filter(name => name !== fileName);
+            state.history.unshift(fileName);
+            if (state.history.length > 50) state.history.pop();
+            saveArrayToCookie(HISTORY_COOKIE_NAME, state.history);
         }
 
         /* =========================================================
@@ -548,7 +799,7 @@
             DOM.loading.style.display = "none";
 
             if (state.files.length === 0) {
-                DOM.status.textContent = "No directory selected."; showMessage("Select a directory from the bottom left panel.");
+                DOM.status.textContent = "No folder selected."; showMessage("Select a folder using the bottom left panel.");
                 updateActionButtons(); return;
             }
 
@@ -557,15 +808,20 @@
 
             updatePool(); updateIdleStatus(); updateActionButtons();
 
-            if (state.images.length === 0) { showMessage("No readable image has been found."); return; }
-            if (state.pool.length === 0) { showMessage("No images matching those criteria/tags."); return; }
+            if (state.images.length === 0) { showMessage("No readable images found."); return; }
+            if (state.pool.length === 0) { showMessage("No images match those criteria/tags."); return; }
             showPreview();
         }
 
         function getFilteredFiles() {
-            const n = t => String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
-            const getTags = el => el.value.split(",").map(n).filter(t => t.length > 0);
-            const andSel = getTags(DOM.andSelect), orSel = getTags(DOM.orSelect), andExc = getTags(DOM.andExclude), orExc = getTags(DOM.orExclude);
+            const n = t => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+            const andSelVal = DOM.andSelect.value || DOM.andSelectMobile.value || "";
+            const orSelVal = DOM.orSelect.value || DOM.orSelectMobile.value || "";
+            const andExcVal = DOM.andExclude.value || DOM.andExcludeMobile.value || "";
+            const orExcVal = DOM.orExclude.value || DOM.orExcludeMobile.value || "";
+
+            const getTags = val => val.split(",").map(n).filter(t => t.length > 0);
+            const andSel = getTags(andSelVal), orSel = getTags(orSelVal), andExc = getTags(andExcVal), orExc = getTags(orExcVal);
             
             return state.images.filter(file => {
                 if (state.banned.includes(file.name)) return false;
@@ -584,7 +840,7 @@
         }
 
         function updateIdleStatus() {
-            if (state.files.length === 0) { DOM.status.textContent = "No directory selected."; DOM.unknownBtn.disabled = true; return; }
+            if (state.files.length === 0) { DOM.status.textContent = "No folder selected."; DOM.unknownBtn.disabled = true; return; }
             DOM.status.textContent = `${state.pool.length} / ${state.images.length} images · ${state.files.length} files`;
             DOM.unknownBtn.disabled = state.unknownFiles.length === 0;
         }
@@ -601,6 +857,7 @@
             state.renderTimeout = setTimeout(() => {
                 if (state.objectURL) URL.revokeObjectURL(state.objectURL);
                 state.currentFile = file; state.zoomLevel = 1;
+                DOM.image.classList.remove("blurred");
                 DOM.image.style.transformOrigin = "center center"; 
                 DOM.image.style.transform = "scale(1)";
                 state.objectURL = URL.createObjectURL(file);
@@ -610,6 +867,8 @@
                 DOM.filename.textContent = file.name; 
                 DOM.filename.style.display = "block";
                 DOM.message.style.display = "none";
+                
+                addToHistory(file.name);
                 updateActionButtons();
             }, 60);
         }
@@ -617,6 +876,7 @@
         function hideImage() {
             if (state.renderTimeout) clearTimeout(state.renderTimeout);
             state.currentFile = null; state.zoomLevel = 1;
+            DOM.image.classList.remove("blurred");
             DOM.image.style.display = "none"; DOM.image.removeAttribute("src");
             DOM.filename.style.display = "none"; DOM.filename.textContent = "";
             if (state.objectURL) { URL.revokeObjectURL(state.objectURL); state.objectURL = null; }
@@ -665,7 +925,6 @@
                 x = rawX;
                 y = rawY;
             } else {
-                // Delayed recentering: progress starts shifting toward center only when zoom is close to 1 (fitting size)
                 const progress = Math.pow((newZoom - 1) / 4, 3);
                 x = 50 + (rawX - 50) * (1 - progress);
                 y = 50 + (rawY - 50) * (1 - progress);
@@ -682,8 +941,9 @@
         ========================================================= */
         function generateQueue() {
             const availableFiles = getFilteredFiles();
-            const seqStr = DOM.sequenceInput.value.trim();
-            const n = t => String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+            const seqVal = DOM.sequenceInput.value || DOM.sequenceInputMobile.value || "";
+            const seqStr = seqVal.trim();
+            const n = t => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
             if (!seqStr) return [...availableFiles].sort(() => Math.random() - 0.5);
 
@@ -720,12 +980,17 @@
 
         function startSeries() {
             updatePool();
-            if (!state.images.length) return alert("Select a directory first.");
-            if (!state.pool.length) { alert("No matching image."); return updateIdleStatus(); }
+            if (!state.images.length) return alert("Please select a folder first.");
+            if (!state.pool.length) { alert("No matching images."); return updateIdleStatus(); }
             const dur = parseTimeToSeconds(DOM.duration.value);
             if (dur <= 0) return alert("Time must be greater than 0.");
 
-            state.duration = dur; saveSettings();
+            state.duration = dur; 
+            const blinkVal = DOM.blink.value || DOM.blinkMobile.value || "";
+            const blinkParsed = parseBlinkInput(blinkVal);
+            state.blinkBlurDelay = blinkParsed.blurDelay;
+            state.blinkRevealDuration = blinkParsed.revealDuration;
+            saveSettings();
             
             state.queue = generateQueue();
             
@@ -762,6 +1027,7 @@
         function runCountdown(seriesId) {
             if (state.countdownTimer) clearInterval(state.countdownTimer);
             updateTimerDisplay(); DOM.timer.style.display = "block";
+            
             state.countdownTimer = setInterval(() => {
                 if (seriesId !== state.seriesId || !state.running || state.paused) return;
                 state.secondsRemaining = Math.max(0, state.secondsRemaining - 1);
@@ -773,6 +1039,25 @@
             DOM.timer.textContent = formatDuration(state.secondsRemaining);
             if (state.secondsRemaining <= state.duration * 0.1) DOM.timer.classList.add("warning");
             else DOM.timer.classList.remove("warning");
+
+            if (state.blinkBlurDelay > 0) {
+                const elapsedTime = state.duration - state.secondsRemaining;
+                const revealStartThreshold = state.duration - state.blinkRevealDuration;
+                
+                let shouldBlur = false;
+                if (elapsedTime >= state.blinkBlurDelay) {
+                    if (state.blinkRevealDuration > 0) {
+                        shouldBlur = (elapsedTime < revealStartThreshold);
+                    } else {
+                        shouldBlur = true;
+                    }
+                }
+
+                if (shouldBlur) DOM.image.classList.add("blurred");
+                else DOM.image.classList.remove("blurred");
+            } else {
+                DOM.image.classList.remove("blurred");
+            }
         }
 
         function togglePause() {
@@ -790,6 +1075,7 @@
             state.seriesId++; state.running = false; state.paused = false; clearTimers();
             DOM.go.textContent = "Go"; DOM.pause.textContent = "❚❚";
             DOM.timer.style.display = "none"; DOM.timer.classList.remove("warning");
+            DOM.image.classList.remove("blurred");
             updateActionButtons(); showToast("Stopped");
         }
 
@@ -803,7 +1089,7 @@
         }
 
         /* =========================================================
-           FAVORITES & BANS
+           FAVORITES, BANS & HISTORY
         ========================================================= */
         function banCurrentImage() {
             if (!state.currentFile) return;
@@ -827,47 +1113,67 @@
         function toggleFavoriteCurrent() {
             if (!state.currentFile) return;
             const idx = state.favorites.indexOf(state.currentFile.name);
-            if (idx === -1) { state.favorites.push(state.currentFile.name); showToast("Added to favourites"); }
-            else { state.favorites.splice(idx, 1); showToast("Removed from favourites"); }
+            if (idx === -1) { state.favorites.push(state.currentFile.name); showToast("Added to favorites"); }
+            else { state.favorites.splice(idx, 1); showToast("Removed from favorites"); }
             saveArrayToCookie(FAV_COOKIE_NAME, state.favorites); updateActionButtons(); updatePool();
             if (!state.running) updateIdleStatus();
         }
 
         function renderList(type, listArr, container, modalId) {
-            const isBanned = type === 'banned';
-            const thumbArray = isBanned ? state.modalThumbURLs : state.favModalThumbURLs;
-            thumbArray.forEach(URL.revokeObjectURL);
-            if (isBanned) state.modalThumbURLs = []; else state.favModalThumbURLs = [];
+            state.modalThumbURLs.forEach(URL.revokeObjectURL);
+            state.modalThumbURLs = [];
             
             container.innerHTML = "";
             if (!listArr.length) { 
-                container.innerHTML = `<div style="color:#777; text-align:center; padding:20px;">No ${isBanned ? 'banned' : 'favorite'} images</div>`; 
+                container.innerHTML = `<div style="color:#777; text-align:center; padding:20px;">No images in ${type}</div>`; 
                 return; 
             }
             
             listArr.forEach(fileName => {
-                const item = document.createElement("div"), file = state.images.find(f => f.name === fileName);
-                item.className = isBanned ? "banned-item" : "fav-item";
-                let thumbHTML = `<div class="${isBanned ? 'banned' : 'fav'}-thumb-placeholder">N/A</div>`;
+                const item = document.createElement("div");
+                const file = state.images.find(f => f.name === fileName);
+                item.className = "list-item";
                 
+                let thumbEl;
                 if (file) {
                     const url = URL.createObjectURL(file);
-                    (isBanned ? state.modalThumbURLs : state.favModalThumbURLs).push(url);
-                    thumbHTML = `<img src="${url}" class="${isBanned ? 'banned' : 'fav'}-thumb" title="Click to view">`;
+                    state.modalThumbURLs.push(url);
+                    thumbEl = document.createElement("img");
+                    thumbEl.src = url;
+                    thumbEl.className = "item-thumb";
+                    thumbEl.title = "Click to view";
+                    thumbEl.onclick = () => { showImage(file); document.getElementById(modalId).classList.remove("open"); };
+                } else {
+                    thumbEl = document.createElement("div");
+                    thumbEl.className = "item-thumb-placeholder";
+                    thumbEl.textContent = "N/A";
                 }
-                
-                item.innerHTML = `${thumbHTML}<span class="${isBanned ? 'banned' : 'fav'}-item-name" title="${fileName}">${fileName}</span><button class="remove-btn">Remove</button>`;
-                if (file) item.querySelector(`.${isBanned ? 'banned' : 'fav'}-thumb`).onclick = () => { showImage(file); document.getElementById(modalId).classList.remove("open"); };
-                item.querySelector('.remove-btn').onclick = () => {
-                    if (isBanned) { 
-                        state.banned = state.banned.filter(n => n !== fileName); 
-                        saveArrayToCookie(BANNED_COOKIE_NAME, state.banned); 
-                    } else { 
-                        state.favorites = state.favorites.filter(n => n !== fileName); 
-                        saveArrayToCookie(FAV_COOKIE_NAME, state.favorites); 
-                    }
-                    updateActionButtons(); updatePool(); updateIdleStatus(); renderList(type, listArr, container, modalId);
-                };
+
+                const nameEl = document.createElement("span");
+                nameEl.className = "item-name";
+                nameEl.title = fileName;
+                nameEl.textContent = fileName;
+
+                item.appendChild(thumbEl);
+                item.appendChild(nameEl);
+
+                if (type !== 'history') {
+                    const removeBtn = document.createElement("button");
+                    removeBtn.className = "remove-btn";
+                    removeBtn.textContent = "Remove";
+                    removeBtn.onclick = () => {
+                        if (type === 'banned') { 
+                            state.banned = state.banned.filter(n => n !== fileName); 
+                            saveArrayToCookie(BANNED_COOKIE_NAME, state.banned); 
+                        } else if (type === 'fav') { 
+                            state.favorites = state.favorites.filter(n => n !== fileName); 
+                            saveArrayToCookie(FAV_COOKIE_NAME, state.favorites); 
+                        }
+                        updateActionButtons(); updatePool(); updateIdleStatus(); renderList(type, listArr, container, modalId);
+                    };
+                    item.appendChild(removeBtn);
+                }
+
                 container.appendChild(item);
             });
         }
@@ -888,7 +1194,7 @@
 
         const handleTags = () => {
             let tagTimeout;
-            const handleTags = () => {
+            return () => {
                 clearTimeout(tagTimeout);
                 tagTimeout = setTimeout(() => {
                     saveSettings(); if (state.running) return;
@@ -897,16 +1203,47 @@
                     else if (state.pool.length > 0) showPreview();
                 }, 300);
             };
-
-            ['andSelect', 'orSelect', 'andExclude', 'orExclude'].forEach(id => DOM[id].addEventListener("input", handleTags));
-            DOM.onlyFavCheckbox.addEventListener("change", handleTags);
-            DOM.sequenceInput.addEventListener("input", saveSettings);
         };
 
-        ['sequenceInput', 'andSelect', 'orSelect', 'andExclude', 'orExclude'].forEach(id => DOM[id].addEventListener("input", handleTags));
-        DOM.onlyFavCheckbox.addEventListener("change", handleTags);
+        const tagHandler = handleTags();
+
+        [DOM.andSelect, DOM.orSelect, DOM.andExclude, DOM.orExclude, DOM.andSelectMobile, DOM.orSelectMobile, DOM.andExcludeMobile, DOM.orExcludeMobile].forEach(el => {
+            if (el) el.addEventListener("input", tagHandler);
+        });
+
+        DOM.onlyFavCheckbox.addEventListener("change", tagHandler);
+        
+        DOM.sequenceInput.addEventListener("input", (e) => {
+            syncInputValue(null, DOM.sequenceInputMobile, e.target.value);
+            saveSettings();
+        });
+        DOM.sequenceInputMobile.addEventListener("input", (e) => {
+            syncInputValue(DOM.sequenceInput, null, e.target.value);
+            saveSettings();
+        });
+
         DOM.duration.addEventListener("change", () => { state.duration = parseTimeToSeconds(DOM.duration.value); saveSettings(); });
+        
+        DOM.blink.addEventListener("change", (e) => { 
+            syncInputValue(null, DOM.blinkMobile, e.target.value);
+            const parsed = parseBlinkInput(e.target.value);
+            state.blinkBlurDelay = parsed.blurDelay;
+            state.blinkRevealDuration = parsed.revealDuration;
+            saveSettings(); 
+        });
+        DOM.blinkMobile.addEventListener("change", (e) => { 
+            syncInputValue(DOM.blink, null, e.target.value);
+            const parsed = parseBlinkInput(e.target.value);
+            state.blinkBlurDelay = parsed.blurDelay;
+            state.blinkRevealDuration = parsed.revealDuration;
+            saveSettings(); 
+        });
+
         DOM.folder.addEventListener("change", () => loadDirectory(DOM.folder.files, true));
+
+        DOM.menuToggleBtn.addEventListener("click", () => {
+            DOM.collapsibleFilters.classList.toggle("open");
+        });
 
         DOM.go.addEventListener("click", () => state.running ? (stopSeries(), updateIdleStatus()) : startSeries());
         DOM.pause.addEventListener("click", togglePause);
@@ -915,15 +1252,32 @@
         
         DOM.bannedMenu.addEventListener("click", () => toggleModal(DOM.bannedModal, () => renderList('banned', state.banned, DOM.bannedList, 'bannedModal')));
         DOM.favMenu.addEventListener("click", () => toggleModal(DOM.favModal, () => renderList('fav', state.favorites, DOM.favList, 'favModal')));
+        DOM.historyMenu.addEventListener("click", () => toggleModal(DOM.historyModal, () => renderList('history', state.history, DOM.historyList, 'historyModal')));
+        
         DOM.unknownBtn.addEventListener("click", () => toggleModal(DOM.unknownModal, () => {
-            DOM.unknownList.innerHTML = state.unknownFiles.length ? state.unknownFiles.map(f => `<div class="unknown-item"><span class="unknown-item-name" title="${f.name}">${f.name}</span></div>`).join('') : '<div style="color:#777; text-align:center; padding:20px;">No unknown files</div>';
+            DOM.unknownList.innerHTML = "";
+            if (state.unknownFiles.length) {
+                state.unknownFiles.forEach(f => {
+                    const item = document.createElement("div");
+                    item.className = "list-item";
+                    const span = document.createElement("span");
+                    span.className = "item-name";
+                    span.title = f.name;
+                    span.textContent = f.name;
+                    item.appendChild(span);
+                    DOM.unknownList.appendChild(item);
+                });
+            } else {
+                DOM.unknownList.innerHTML = '<div style="color:#777; text-align:center; padding:20px;">No unknown files</div>';
+            }
         }));
 
-        [DOM.closeModal, DOM.closeFavModal, DOM.closeUnknownModal].forEach(btn => btn.addEventListener("click", e => e.target.closest('.modal').classList.remove("open")));
-        [DOM.bannedModal, DOM.favModal, DOM.unknownModal].forEach(m => m.addEventListener("click", e => { if (e.target === m) m.classList.remove("open"); }));
+        [DOM.closeModal, DOM.closeFavModal, DOM.closeHistoryModal, DOM.closeUnknownModal].forEach(btn => btn.addEventListener("click", e => e.target.closest('.modal').classList.remove("open")));
+        [DOM.bannedModal, DOM.favModal, DOM.historyModal, DOM.unknownModal].forEach(m => m.addEventListener("click", e => { if (e.target === m) m.classList.remove("open"); }));
 
         DOM.unbanAll.addEventListener("click", () => { state.banned = []; saveArrayToCookie(BANNED_COOKIE_NAME, []); updatePool(); updateIdleStatus(); renderList('banned', state.banned, DOM.bannedList, 'bannedModal'); });
         DOM.unfavAll.addEventListener("click", () => { state.favorites = []; saveArrayToCookie(FAV_COOKIE_NAME, []); updateActionButtons(); updatePool(); updateIdleStatus(); renderList('fav', state.favorites, DOM.favList, 'favModal'); });
+        DOM.clearHistory.addEventListener("click", () => { state.history = []; saveArrayToCookie(HISTORY_COOKIE_NAME, []); renderList('history', state.history, DOM.historyList, 'historyModal'); });
 
         document.addEventListener("keydown", e => {
             const tag = document.activeElement?.tagName;
@@ -937,11 +1291,17 @@
             else if (k === "f") { e.preventDefault(); toggleFavoriteCurrent(); }
             else if (k === "l") { e.preventDefault(); toggleModal(DOM.bannedModal, () => renderList('banned', state.banned, DOM.bannedList, 'bannedModal')); }
             else if (k === "m") { e.preventDefault(); toggleModal(DOM.favModal, () => renderList('fav', state.favorites, DOM.favList, 'favModal')); }
+            else if (k === "h") { e.preventDefault(); toggleModal(DOM.historyModal, () => renderList('history', state.history, DOM.historyList, 'historyModal')); }
         });
 
         // INIT
-        loadSettings(); state.banned = loadArrayFromCookie(BANNED_COOKIE_NAME); state.favorites = loadArrayFromCookie(FAV_COOKIE_NAME);
+        loadSettings(); 
+        state.banned = loadArrayFromCookie(BANNED_COOKIE_NAME); 
+        state.favorites = loadArrayFromCookie(FAV_COOKIE_NAME);
+        state.history = loadArrayFromCookie(HISTORY_COOKIE_NAME);
+        setupNavbarTooltips();
         updateActionButtons();
+        
         (async () => {
             const cached = await loadFilesFromIDB();
             if (cached && cached.length) { 
