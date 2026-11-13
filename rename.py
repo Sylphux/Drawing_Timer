@@ -6,7 +6,7 @@ arguments = ""
 dir_path = os.getcwd()
 
 def help():
-    print("This script modifies all the files in the directory with different operations. It is used to add keywords in a large volume of files.\nadd: Use 'add your_string' to add a string\nrem: use 'rem string_to_remove' to remove a string\nrep: use 'rep old_string new_string' to replace a string with another\nbeg: use 'beg new_beginning' to concatenate a string at the beginning")
+    print("This script modifies all the files in the directory with different operations. It is used to add keywords in a large volume of files.\nadd: Use 'add your_string' to add a string\nrem: use 'rem string_to_remove' to remove a string\nrep: use 'rep old_string new_string' to replace a string with another\nbeg: use 'beg new_beginning' to concatenate a string at the beginning\nren: use 'ren new_basename' to rename all the files completely with a new base name")
     exit()
 
 def verify_command():
