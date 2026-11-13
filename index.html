@@ -657,10 +657,15 @@
                     }, 1000); // 1 second
                 });
 
-                el.addEventListener("mouseleave", () => {
+                const hideTooltip = () => {
                     clearTimeout(tooltipTimer);
                     DOM.navTooltip.classList.remove("visible");
-                });
+                };
+
+                el.addEventListener("mouseleave", hideTooltip);
+                el.addEventListener("click", hideTooltip);
+                el.addEventListener("pointerdown", hideTooltip);
+                el.addEventListener("focusin", hideTooltip);
             });
         }
 
@@ -668,8 +673,23 @@
            HELPERS & SETTINGS
         ========================================================= */
         function syncInputValue(desktopEl, mobileEl, val) {
-            if (desktopEl) desktopEl.value = val;
-            if (mobileEl) mobileEl.value = val;
+            if (desktopEl && desktopEl.value !== val) desktopEl.value = val;
+            if (mobileEl && mobileEl.value !== val) mobileEl.value = val;
+        }
+
+        function bindSyncedInputs(desktopEl, mobileEl, callback) {
+            if (desktopEl && mobileEl) {
+                desktopEl.addEventListener("input", (e) => {
+                    const val = e.target.value;
+                    if (mobileEl.value !== val) mobileEl.value = val;
+                    if (callback) callback(val);
+                });
+                mobileEl.addEventListener("input", (e) => {
+                    const val = e.target.value;
+                    if (desktopEl.value !== val) desktopEl.value = val;
+                    if (callback) callback(val);
+                });
+            }
         }
 
         function saveSettings() {
@@ -775,8 +795,14 @@
         }
 
         /* =========================================================
-           CORE LOGIC
+           CORE LOGIC & FILE TYPE ROBUSTNESS
         ========================================================= */
+        function isImageFile(file) {
+            if (file.type && file.type.startsWith("image/")) return true;
+            const name = (file.name || "").toLowerCase();
+            return /\.(jpg|jpeg|png|webp|gif|bmp|avif|svg)$/.test(name);
+        }
+
         function loadDirectory(fileList, persist = true) {
             stopSeries(); 
             DOM.status.textContent = `${fileList.length} files — loading...`;
@@ -803,8 +829,8 @@
                 updateActionButtons(); return;
             }
 
-            state.images = state.files.filter(f => f.type && f.type.startsWith("image/"));
-            state.unknownFiles = state.files.filter(f => !f.type || !f.type.startsWith("image/"));
+            state.images = state.files.filter(f => isImageFile(f));
+            state.unknownFiles = state.files.filter(f => !isImageFile(f));
 
             updatePool(); updateIdleStatus(); updateActionButtons();
 
@@ -814,11 +840,12 @@
         }
 
         function getFilteredFiles() {
-            const n = t => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-            const andSelVal = DOM.andSelect.value || DOM.andSelectMobile.value || "";
-            const orSelVal = DOM.orSelect.value || DOM.orSelectMobile.value || "";
-            const andExcVal = DOM.andExclude.value || DOM.andExcludeMobile.value || "";
-            const orExcVal = DOM.orExclude.value || DOM.orExcludeMobile.value || "";
+            const n = t => String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+            const isMobileView = window.innerWidth <= 1800;
+            const andSelVal = isMobileView ? DOM.andSelectMobile.value : DOM.andSelect.value;
+            const orSelVal = isMobileView ? DOM.orSelectMobile.value : DOM.orSelect.value;
+            const andExcVal = isMobileView ? DOM.andExcludeMobile.value : DOM.andExclude.value;
+            const orExcVal = isMobileView ? DOM.orExcludeMobile.value : DOM.orExclude.value;
 
             const getTags = val => val.split(",").map(n).filter(t => t.length > 0);
             const andSel = getTags(andSelVal), orSel = getTags(orSelVal), andExc = getTags(andExcVal), orExc = getTags(orExcVal);
@@ -937,19 +964,20 @@
         }, { passive: false });
 
         /* =========================================================
-           SLIDESHOW TIMERS & SEQUENCE GENERATION
+           SLIDESHOW TIMERS & OPTIMIZED SEQUENCE GENERATION
         ========================================================= */
         function generateQueue() {
             const availableFiles = getFilteredFiles();
-            const seqVal = DOM.sequenceInput.value || DOM.sequenceInputMobile.value || "";
+            const seqVal = (window.innerWidth <= 1800) ? DOM.sequenceInputMobile.value : DOM.sequenceInput.value;
             const seqStr = seqVal.trim();
-            const n = t => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+            const n = t => String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 
             if (!seqStr) return [...availableFiles].sort(() => Math.random() - 0.5);
 
             const tags = seqStr.split(",").map(n).filter(t => t.length > 0);
             if (tags.length === 0) return [...availableFiles].sort(() => Math.random() - 0.5);
 
+            // Create shuffled buckets for each tag
             const tagBuckets = tags.map(tag => {
                 return availableFiles
                     .filter(file => n(file.name).includes(tag))
@@ -975,6 +1003,13 @@
                     }
                 }
             }
+
+            // If any matching files were left over in availableFiles that didn't match any specific sequence tag,
+            // or if sequence resulted in items, ensure balanced inclusion or fallback.
+            if (builtQueue.length === 0) {
+                return [...availableFiles].sort(() => Math.random() - 0.5);
+            }
+
             return builtQueue;
         }
 
@@ -986,7 +1021,7 @@
             if (dur <= 0) return alert("Time must be greater than 0.");
 
             state.duration = dur; 
-            const blinkVal = DOM.blink.value || DOM.blinkMobile.value || "";
+            const blinkVal = (window.innerWidth <= 1800) ? DOM.blinkMobile.value : DOM.blink.value;
             const blinkParsed = parseBlinkInput(blinkVal);
             state.blinkBlurDelay = blinkParsed.blurDelay;
             state.blinkRevealDuration = blinkParsed.revealDuration;
@@ -1207,41 +1242,47 @@
 
         const tagHandler = handleTags();
 
-        [DOM.andSelect, DOM.orSelect, DOM.andExclude, DOM.orExclude, DOM.andSelectMobile, DOM.orSelectMobile, DOM.andExcludeMobile, DOM.orExcludeMobile].forEach(el => {
-            if (el) el.addEventListener("input", tagHandler);
+        // Wire up bidirectional input synchronization between desktop and mobile fields
+        bindSyncedInputs(DOM.sequenceInput, DOM.sequenceInputMobile, () => saveSettings());
+        bindSyncedInputs(DOM.blink, DOM.blinkMobile, (val) => {
+            const parsed = parseBlinkInput(val);
+            state.blinkBlurDelay = parsed.blurDelay;
+            state.blinkRevealDuration = parsed.revealDuration;
+            saveSettings();
         });
+        bindSyncedInputs(DOM.andSelect, DOM.andSelectMobile, tagHandler);
+        bindSyncedInputs(DOM.orSelect, DOM.orSelectMobile, tagHandler);
+        bindSyncedInputs(DOM.andExclude, DOM.andExcludeMobile, tagHandler);
+        bindSyncedInputs(DOM.orExclude, DOM.orExcludeMobile, tagHandler);
 
         DOM.onlyFavCheckbox.addEventListener("change", tagHandler);
-        
-        DOM.sequenceInput.addEventListener("input", (e) => {
-            syncInputValue(null, DOM.sequenceInputMobile, e.target.value);
-            saveSettings();
-        });
-        DOM.sequenceInputMobile.addEventListener("input", (e) => {
-            syncInputValue(DOM.sequenceInput, null, e.target.value);
-            saveSettings();
-        });
 
         DOM.duration.addEventListener("change", () => { state.duration = parseTimeToSeconds(DOM.duration.value); saveSettings(); });
-        
-        DOM.blink.addEventListener("change", (e) => { 
-            syncInputValue(null, DOM.blinkMobile, e.target.value);
-            const parsed = parseBlinkInput(e.target.value);
-            state.blinkBlurDelay = parsed.blurDelay;
-            state.blinkRevealDuration = parsed.revealDuration;
-            saveSettings(); 
-        });
-        DOM.blinkMobile.addEventListener("change", (e) => { 
-            syncInputValue(DOM.blink, null, e.target.value);
-            const parsed = parseBlinkInput(e.target.value);
-            state.blinkBlurDelay = parsed.blurDelay;
-            state.blinkRevealDuration = parsed.revealDuration;
-            saveSettings(); 
-        });
-
         DOM.folder.addEventListener("change", () => loadDirectory(DOM.folder.files, true));
 
+        function syncAllFiltersFromActive() {
+            const isMobileView = window.innerWidth <= 1800;
+            if (isMobileView) {
+                syncInputValue(DOM.blink, null, DOM.blinkMobile.value);
+                syncInputValue(DOM.sequenceInput, null, DOM.sequenceInputMobile.value);
+                syncInputValue(DOM.andSelect, null, DOM.andSelectMobile.value);
+                syncInputValue(DOM.orSelect, null, DOM.orSelectMobile.value);
+                syncInputValue(DOM.andExclude, null, DOM.andExcludeMobile.value);
+                syncInputValue(DOM.orExclude, null, DOM.orExcludeMobile.value);
+            } else {
+                syncInputValue(null, DOM.blinkMobile, DOM.blink.value);
+                syncInputValue(null, DOM.sequenceInputMobile, DOM.sequenceInput.value);
+                syncInputValue(null, DOM.andSelectMobile, DOM.andSelect.value);
+                syncInputValue(null, DOM.orSelectMobile, DOM.orSelect.value);
+                syncInputValue(null, DOM.andExcludeMobile, DOM.andExclude.value);
+                syncInputValue(null, DOM.orExcludeMobile, DOM.orExclude.value);
+            }
+        }
+
+        window.addEventListener("resize", syncAllFiltersFromActive);
+
         DOM.menuToggleBtn.addEventListener("click", () => {
+            syncAllFiltersFromActive();
             DOM.collapsibleFilters.classList.toggle("open");
         });
 
